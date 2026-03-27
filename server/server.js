@@ -11,5 +11,7 @@ connectDB();
 
 app.use("/auth", require("./routes/auth"));
 
+app.use('/api/profile', require('./routes/profile'));
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () => console.log(`Server running on ${PORT}`));
