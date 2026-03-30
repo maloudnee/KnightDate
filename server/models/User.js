@@ -12,8 +12,12 @@ const UserSchema = new mongoose.Schema({
   Age: { type: Number },
   Major: { type: String },
   Bio: { type: String },
+  SexualOrientation: { type: String},
+  Gender: { type: String},
+
 
   // Matching system
+  InterestedIn: {type: [String], default: []},
   Matches: { type: [String], default: [] },
   LikedUsers: { type: [String], default: [] }
 });
