@@ -11,6 +11,8 @@ connectDB();
 
 app.use("/auth", require("./routes/auth"));
 
+app.use("/uploads", express.static("uploads"));
+
 app.use('/api/profile', require('./routes/profile'));
 
 const PORT = process.env.PORT || 5000;

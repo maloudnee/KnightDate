@@ -15,6 +15,11 @@ const UserSchema = new mongoose.Schema({
   SexualOrientation: { type: String},
   Gender: { type: String},
 
+  // Profile picture
+  ProfilePicture: {
+    type: String,
+    default: ""
+  },
 
   // Matching system
   InterestedIn: {type: [String], default: []},
