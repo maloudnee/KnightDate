@@ -16,5 +16,7 @@ app.use("/uploads", express.static("uploads"));
 
 app.use('/api/profile', require('./routes/profile'));
 
+app.use("/api/messages", require("./routes/messages"));
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () => console.log(`Server running on ${PORT}`));
