@@ -11,6 +11,7 @@ connectDB();
 
 app.use("/auth", require("./routes/auth"));
 
+app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
 
 app.use('/api/profile', require('./routes/profile'));
