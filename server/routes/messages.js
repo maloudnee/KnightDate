@@ -12,6 +12,10 @@ router.post("/send", async (req, res) => {
     return res.status(400).json({ message: "Missing fields" });
   }
 
+  if (senderID === recieverID) {
+    return res.status(400).json({ message: "Cannot send a message to yourself" });
+  }
+  
   const message = new Message({
     senderID,
     recieverID,
