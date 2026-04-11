@@ -1,6 +1,9 @@
 const router = require('express').Router();
 const User = require('../models/User');
 const multer = require("multer");
+const verifyJWT = require('../verifyJWT');
+
+router.use(verifyJWT);
 
 const storage = multer.diskStorage({
   destination: "./uploads/",
