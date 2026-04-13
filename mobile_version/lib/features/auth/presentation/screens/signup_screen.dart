@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 
@@ -144,17 +145,23 @@ class _SignupScreenState extends State<SignupScreen> {
 
           // Sign Up Button
           ElevatedButton(
-            onPressed: _submit,
+            onPressed: _isSubmitting ? null : _submit,
             style: ElevatedButton.styleFrom(
               backgroundColor: gold,
               foregroundColor: Colors.black,
               minimumSize: const Size(double.infinity, 55),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: const Text(
-              "Create Account",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
+            child: _isSubmitting 
+              ? const SizedBox(
+                  width: 24, 
+                  height: 24, 
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                )
+              : const Text(
+                  "Create Account",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
           ),
           const SizedBox(height: 40),
         ],
@@ -217,9 +224,25 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> _submit() async {
+    if (_firstNameController.text.isEmpty ||
+        _lastNameController.text.isEmpty ||
+        _ageController.text.isEmpty ||
+        _majorController.text.isEmpty ||
+        _bioController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _usernameController.text.isEmpty ||
+        _passwordController.text.isEmpty ||
+        _selectedGender == null ||
+        _selectedOrientation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill in all fields"))
+      );
+      return;
+    }
+
     setState(() => _isSubmitting = true);
     
-    var uri = Uri.parse('http://localhost:3000/api/signup');
+    var uri = Uri.parse('http://knightdate.xyz:5000/api/signup');
 
     var request = http.MultipartRequest('POST', uri);
 
@@ -229,8 +252,8 @@ class _SignupScreenState extends State<SignupScreen> {
     request.fields['Major'] = _majorController.text;
     request.fields['Bio'] = _bioController.text;
     request.fields['Email'] = _emailController.text;
-    request.fields['Username'] = _usernameController.text;
-    request.fields['Password'] = _passwordController.text;
+    request.fields['username'] = _usernameController.text;
+    request.fields['password'] = _passwordController.text;
     request.fields['Gender'] = _selectedGender?.toLowerCase() ?? "";
     request.fields['Orientation'] = _selectedOrientation?.toLowerCase() ?? "";
 
@@ -243,14 +266,24 @@ class _SignupScreenState extends State<SignupScreen> {
       var response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
-        // Handle successful signup
-        print("Signup successful: ${response.body}");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Account created successfully! Please verify your email before logging in."))
+          );
+          Navigator.of(context).pop();
+        }
       } else {
         // Handle error response
-        print("Signup failed: ${response.statusCode} - ${response.body}");
+        final errorData = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorData['message'] ?? "Failed to create account. Please try again."))
+        );
       }
     } catch (e) {
-      print("Error occurred: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Server unreachable. Check your connection."))
+      );
+      print("Signup error: $e");
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);  

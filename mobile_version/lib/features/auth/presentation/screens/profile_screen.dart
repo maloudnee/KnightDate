@@ -1,14 +1,60 @@
 import 'package:flutter/material.dart';
 import 'welcome_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  bool _isLoading = true;
+  Map<String, dynamic>? userData;
   static const gold = Color(0xFFD4AF37);
 
   @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? token = prefs.getString('token');
+
+      final response = await http.get(
+        Uri.parse('http://knightdate.xyz:5000/api/profile'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token"
+        },
+      );
+      if (response.statusCode == 200) {
+        setState(() {
+          userData = json.decode(response.body);
+          _isLoading = false;
+        });
+      } 
+    } catch (e) {
+      setState(() => _isLoading = false);
+      print("Error loading profile: $e");
+    }
+  }
+
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: isDark ? Colors.black : Colors.white,
+        body: const Center(child: CircularProgressIndicator(color: gold)),
+       );
+    }
 
     return Scaffold(
       backgroundColor: isDark ? Colors.black : Colors.white,
@@ -16,16 +62,19 @@ class ProfileScreen extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 60), 
-            
+
+            // Profile Picture
             Center(
               child: Stack(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: const BoxDecoration(color: gold, shape: BoxShape.circle),
-                    child: const CircleAvatar(
+                    child: CircleAvatar(
                       radius: 70,
-                      backgroundImage: NetworkImage("https://via.placeholder.com/150"), 
+                      backgroundImage: userData?['profilePicture'] != null 
+                        ? NetworkImage("http://knightdate.xyz:5000/${userData!['profilePicture']}") 
+                        : const NetworkImage("https://via.placeholder.com/150"), // Placeholder image
                     ),
                   ),
                   Positioned(
@@ -41,12 +90,12 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 15),
-            const Text(
-              "Sir Knight, 22", // Use real data here
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+            Text(
+              "${userData?['FirstName'] ?? "N/A"}, ${userData?['Age'] ?? ''}",
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
             ),
-            const Text(
-              "Computer Engineering",
+            Text(
+              userData?['Major'] ?? "N/A",
               style: TextStyle(color: Colors.white70, fontSize: 16),
             ),
             
@@ -56,9 +105,58 @@ class ProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  Expanded(child: _buildActionButton("Edit Profile", Icons.edit_note, isDark)),
+                  Expanded(
+                    child: _buildActionButton(
+                      "Edit Profile", 
+                      Icons.edit_note, 
+                      isDark,
+                      () {
+                        // Navigate to Edit Profile Screen 
+                      },
+                    ),
+                  ),
                   const SizedBox(width: 15),
-                  Expanded(child: _buildActionButton("View Public", Icons.remove_red_eye, isDark)),
+                  Expanded(
+                    child: _buildActionButton(
+                      "View Public", 
+                      Icons.remove_red_eye, 
+                      isDark, 
+                      () {
+                        if (userData != null) {
+                          Navigator.push(
+                            context, 
+                            MaterialPageRoute(
+                              builder: (context) => Scaffold(
+                                appBar: AppBar(title: const Text("Public Profile")),
+                                body: Padding(
+                                  padding: const EdgeInsets.all(20.0),
+                                  child: Column(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 50,
+                                        backgroundImage: userData!['profilePicture'] != null 
+                                          ? NetworkImage("http://knightdate.xyz:5000/${userData!['profilePicture']}") 
+                                          : const NetworkImage("https://via.placeholder.com/150"),
+                                      ),
+                                      const SizedBox(height: 15),
+                                      Text(
+                                        "${userData?['FirstName'] ?? "N/A"}, ${userData?['Age'] ?? ''}",
+                                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                                      ),
+                                      Text(
+                                        userData?['Major'] ?? "N/A",
+                                        style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -84,20 +182,23 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButton(String label, IconData icon, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 15),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: gold.withOpacity(0.3)),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: gold),
-          const SizedBox(height: 5),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-        ],
+  Widget _buildActionButton(String label, IconData icon, bool isDark, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: gold.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: gold),
+            const SizedBox(height: 5),
+            Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+          ],
+        ),
       ),
     );
   }

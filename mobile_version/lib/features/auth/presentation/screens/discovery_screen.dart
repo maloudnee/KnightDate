@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DiscoveryScreen extends StatefulWidget {
   const DiscoveryScreen({super.key});
@@ -22,7 +23,15 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
 
   Future<void> _fetchUsers() async {
     try {
-      final response = await http.get(Uri.parse('https://your-backend-api.com/discover'));
+      final prefs = await SharedPreferences.getInstance();
+      final String? token = prefs.getString('token');
+      final response = await http.get(
+        Uri.parse('http://knightdate.xyz:5000/api/discover'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token"
+        },
+      );
       if (response.statusCode == 200) {
         setState(() {
           users = json.decode(response.body);
@@ -36,6 +45,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("An error occurred while fetching users."))
       );
+      print("Error fetching users: $e");
     }
   }
 

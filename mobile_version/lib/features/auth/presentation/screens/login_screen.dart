@@ -1,6 +1,8 @@
 import 'dart:ui';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -12,16 +14,16 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
 
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isSubmitting = false;
 
   static const gold = Color(0xFFD4AF38);
 
   Future<void> _login() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+    if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter both email and password"))
+        const SnackBar(content: Text("Please enter both username and password"))
       );
       return;
     }
@@ -29,33 +31,47 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      final url = Uri.parse("https://your-backend-api.com/login");
+      final url = Uri.parse("http://knightdate.xyz:5000/auth/login");
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
-        body: '{"email": "${_emailController.text}", "password": "${_passwordController.text}"}',
+        body: jsonEncode({
+          "username": _usernameController.text, 
+          "password": _passwordController.text
+        }),
       );
 
       if (response.statusCode == 200) {
-        // Handle successful login (e.g., navigate to home screen, save token)
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Login successful!"))
-        );
-        Navigator.of(context).pop();
-        Navigator.pushAndRemoveUntil(
-          context, 
-          MaterialPageRoute(builder: (_) => const MainScreen()), 
-          (route) => false
-        );
+        // parse response to get JWT 
+        final Map<String, dynamic> responseData = jsonDecode(response.body);  
+        final String token = responseData['token']; 
+        final String userId = responseData['user']['_id'];
+
+        // save tokens 
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('jwt_token', token);
+        await prefs.setString('user_id', userId);
+
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const MainScreen())
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Login successful!"))
+          );
+        }
+
       } else {
-        // Handle login failure (e.g., show error message)
+        // Handle login failure 
+        final errorData = jsonDecode(response.body);
+        print("Login failed: ${errorData['message']}");
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Invalid email or password"))
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("An error occurred. Please try again."))
+        const SnackBar(content: Text("Server unreachable. Check your connection."))
       );
     } finally {
       if (mounted) {
@@ -111,11 +127,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Email Field
+                    // Username Field
                     _buildTextField(
-                      controller: _emailController,
-                      hint: "Email",
-                      icon: Icons.email_outlined,
+                      controller: _usernameController,
+                      hint: "Username",
+                      icon: Icons.person_outline,
                       isSecure: false,
                       isDark: isDark,
                     ),
