@@ -22,7 +22,7 @@ router.post("/register", async (req, res) => {
     const userExists = await User.findOne({ username });
     if (userExists) return res.status(400).json({ msg: "Username is already taken" });
 
-    const emailExists = await User.findOne({ Email });
+    const emailExists = await User.findOne({ email });
     if (emailExists) return res.status(400).json({ msg: "Email is already taken" });
 
     const hashed = await bcrypt.hash(password, 10);
@@ -109,6 +109,40 @@ router.post("/login", async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ msg: "Server error" });
+  }
+});
+
+router.post("/resend-verification", async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ Email: email });
+    if(!user) {
+      return res.status(404).json({ msg: "No account found with this email." });
+    }
+    if(user.isVerified) {
+      return res.status(404).json({msg: "This account is already verified."})
+    }
+    const verificationToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h"}
+    );
+    const url = `${process.env.BASE_URL}/auth/verify-email?token=${verificationToken}`;
+    
+    await transporter.sendMail({
+      from: '"KnightDate Team" <noreply@knightdate.com>',
+      to: email.trim(),
+      subject: "New Verification Link",
+      html: `<h3>Verify Your KnightDate Account</h3>
+             <p>Use the link below to verify your account:</p>
+             <a href="${url}">Click here to verify your account</a>`
+    });
+
+    res.json({ msg: "A new verification link has been sent to your email." });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({msg: "Server error while resending email verification."});
   }
 });
 
