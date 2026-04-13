@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
@@ -24,18 +25,63 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   Future<void> _fetchMessages() async {
     try {
-      final response = await http.get(Uri.parse('http://localhost:3000/api/messages'));
+      final prefs = await SharedPreferences.getInstance();
+
+      final String? userId = prefs.getString('userId');
+      final String? token = prefs.getString('authToken');
+
+      final String url = "http://knightdate.xyz:5000/api/messages/$userId";
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          newMatches = data['newMatches'] ?? [];
           activeChats = data['chats'] ?? [];
-          _isLoading = false;
+
+          _isLoading = false; 
         });
       }
     } catch (e) {
       print("Error fetching messages: $e");
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> sendMessage(String text, String receiverId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? senderId = prefs.getString('userId');
+      final String? token = prefs.getString('authToken');
+
+      final String url = "http://knightdate.xyz:5000/api/messages/send";
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'sender': senderId,
+          'receiver': receiverId,
+          'content': text,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print("Message sent successfully");
+      } else {
+        print("Failed to send message: ${response.body}");
+      }
+    } catch (e) {
+      print("Error sending message: $e");
     }
   }
 
@@ -100,7 +146,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   // Matches
   Widget _buildMatchCircle(dynamic match) {
-    final imageUrl = 'http://localhost:3000${match['ProfilePicture']}';
+    final imageUrl = 'http://knightdate.xyz:5000${match['ProfilePicture']}';
     
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -127,11 +173,22 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   // Chat Messages
   Widget _buildChatItem(dynamic chat, bool isDark) {
-    final imageUrl = 'http://localhost:3000${chat['ProfilePicture']}';
+    final imageUrl = 'http://knightdate.xyz:5000${chat['ProfilePicture']}';
     bool unread = chat['unread'] ?? false; // Database field for new message
 
     return ListTile(
-      onTap: () { /* Navigate to Chat Details */ },
+      onTap: () { 
+        Navigator.push(
+          context, 
+          MaterialPageRoute(
+            builder: (context) => ChatScreen(
+              recieverId: chat['receiverId'],
+              recieverName: chat['FirstName'] ?? "Unknown",
+              recieverImage: imageUrl,
+            ),
+          ),
+        );
+       },
       leading: Stack(
         children: [
           CircleAvatar(
@@ -165,6 +222,162 @@ class _MessagesScreenState extends State<MessagesScreen> {
         style: TextStyle(color: unread ? Colors.white : Colors.grey, fontWeight: unread ? FontWeight.bold : FontWeight.normal),
       ),
       trailing: const Icon(Icons.chevron_right, color: Colors.white24),
+    );
+  }
+}
+
+class ChatScreen extends StatefulWidget {
+  final String recieverId;
+  final String recieverName;
+  final String recieverImage;
+
+  const ChatScreen({
+    super.key,
+    required this.recieverId,
+    required this.recieverName,
+    required this.recieverImage,
+  });
+
+  @override
+  State<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  final TextEditingController _messageController = TextEditingController();
+  List<dynamic> _messages = [];
+  String? userId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserId();
+    _fetchConversation();
+  }
+
+  Future<void> _loadUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userId = prefs.getString('userId');
+    });
+  }
+
+  Future<void> _handleSend() async {
+    final String text = _messageController.text.trim();
+    if (text.isEmpty) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? senderId = prefs.getString('userId');
+      final String? token = prefs.getString('authToken');
+
+      final response = await http.post(
+        Uri.parse("http://knightdate.xyz:5000/api/messages/send"),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'sender': senderId,
+          'receiver': widget.recieverId,
+          'content': text,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print("Message sent successfully");
+        _messageController.clear();
+        _fetchConversation();
+      } else {
+        print("Failed to send message: ${response.body}");
+      }
+    } catch (e) {
+      print("Error sending message: $e");
+    }
+  }
+
+  Future<void> _fetchConversation() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? userId = prefs.getString('userId');
+    final String? token = prefs.getString('authToken');
+
+    final response = await http.get(
+      Uri.parse("http://knightdate.xyz:5000/api/messages/conversation?user1=$userId&user2=${widget.recieverId}"),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        _messages = jsonDecode(response.body);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.recieverName),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              reverse: true, 
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final message = _messages[index];
+                bool isMe = message['sender'] == userId;
+                return Align(
+                  alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isMe ? Colors.blueAccent : Colors.white10,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(message['content'], style: const TextStyle(color: Colors.white)),
+                  ),
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField( 
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      hintText: "Type a message...",
+                      filled: true,
+                      fillColor: Colors.white10,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.send, color: Color(0xFFD4AF37)),
+                  onPressed: () async {
+                    await _handleSend();
+                  },
+                ), 
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
