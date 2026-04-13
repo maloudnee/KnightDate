@@ -51,15 +51,24 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
 
   // Record user interactions (like/dislike) and send to backend
   Future<void> _handleChoice(bool liked, String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString('token');
+
     setState(() {
       users.removeAt(0); // Remove the current profile from the list
     });
 
     try {
       await http.post(
-        Uri.parse('https://your-backend-api.com/choice'),
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({"userId": userId, "action": liked ? "like" : "dislike"}),
+        Uri.parse('http://knightdate.xyz:5000/api/choices'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token"
+        },
+        body: json.encode({
+          "userId": userId, 
+          "action": liked ? "like" : "dislike"
+        }),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -102,7 +111,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   Widget _buildUserCard(dynamic user, bool isDark) {
-    final String imageUrl = 'https://your-backend-api.com/images/${user['profilePicture']}';
+    final String imageUrl = 'http://knightdate.xyz:5000${user['ProfilePicture']}';
 
     return Container(
       decoration: BoxDecoration(
@@ -152,7 +161,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "${user['name']}, ${user['age']}",
+                    "${user['FirstName']}, ${user['Age']}",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 32,
@@ -168,7 +177,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                     ),
                   ),
                   Text(
-                    user['bio'] ?? "No bio available",
+                    user['Bio'] ?? "No bio available",
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -186,6 +195,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   Widget _buildActionButtons() {
+    if (users.isEmpty) return const SizedBox.shrink();
+
     final topUser = users[0];
 
     return Row(
