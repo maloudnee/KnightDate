@@ -3,6 +3,9 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const User = require("../models/User");
 const Message = require("../models/Message");
+const verifyJWT = require('../verifyJWT');
+
+router.use(verifyJWT);
 
 // SEND MESSAGE
 router.post("/send", async (req, res) => {

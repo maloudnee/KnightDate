@@ -8,12 +8,16 @@ const UserSchema = new mongoose.Schema({
   // Profile fields
   FirstName: { type: String },
   LastName: { type: String },
-  Email: { type: String },
+  Email: { type: String, required: true, unique: true},
   Age: { type: Number },
   Major: { type: String },
   Bio: { type: String },
   SexualOrientation: { type: String},
   Gender: { type: String},
+  
+  // Email Verification
+  isVerified: { type: Boolean, default: false},
+  
 
   // Profile picture
   ProfilePicture: {
