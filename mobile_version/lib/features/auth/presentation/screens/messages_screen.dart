@@ -30,7 +30,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       final String? userId = prefs.getString('userId');
       final String? token = prefs.getString('authToken');
 
-      final String url = "http://knightdate.xyz:5000/api/messages/$userId";
+      final String url = "http://knightdate.xyz/api/messages/inbox/$userId";
 
       final response = await http.get(
         Uri.parse(url),
@@ -60,7 +60,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       final String? senderId = prefs.getString('userId');
       final String? token = prefs.getString('authToken');
 
-      final String url = "http://knightdate.xyz:5000/api/messages/send";
+      final String url = "http://knightdate.xyz/api/messages/send";
 
       final response = await http.post(
         Uri.parse(url),
@@ -146,7 +146,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   // Matches
   Widget _buildMatchCircle(dynamic match) {
-    final imageUrl = 'http://knightdate.xyz:5000${match['ProfilePicture']}';
+    final imageUrl = 'http://knightdate.xyz:${match['ProfilePicture']}';
     
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -173,7 +173,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   // Chat Messages
   Widget _buildChatItem(dynamic chat, bool isDark) {
-    final imageUrl = 'http://knightdate.xyz:5000${chat['ProfilePicture']}';
+    final imageUrl = 'http://knightdate.xyz${chat['ProfilePicture']}';
     bool unread = chat['unread'] ?? false; // Database field for new message
 
     return ListTile(
@@ -271,7 +271,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final String? token = prefs.getString('authToken');
 
       final response = await http.post(
-        Uri.parse("http://knightdate.xyz:5000/api/messages/send"),
+        Uri.parse("http://knightdate.xyz/api/messages/send"),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -301,7 +301,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final String? token = prefs.getString('authToken');
 
     final response = await http.get(
-      Uri.parse("http://knightdate.xyz:5000/api/messages/conversation?user1=$userId&user2=${widget.recieverId}"),
+      Uri.parse("http://knightdate.xyz/api/messages/conversation/${widget.recieverId}/$userId"),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
