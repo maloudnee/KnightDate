@@ -25,24 +25,54 @@ const upload = multer({ storage, fileFilter });
 
 // UPDATE PROFILE
 router.post('/register-profile', async (req, res) => {
-  const { username, firstName, lastName, email, age, major, bio, sexualOrientation, gender } = req.body;
-  const user = await User.findOne({ username });
-  if (!user) return res.status(404).json({ message: "User not found" });
+  const userID = req.user;
+  const { firstName, lastName, email, age, major, bio, sexualOrientation, gender } = req.body;
+  try{
+    const user = await User.findById(userID);
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-  // update profile fields
-  user.FirstName = firstName;
-  user.LastName = lastName;
-  user.Email = email;
-  user.Age = age;
-  user.Major = major;
-  user.Bio = bio;
-  user.SexualOrientation = sexualOrientation;
-  user.Gender = gender;
+    // update profile fields
+    user.FirstName = firstName;
+    user.LastName = lastName;
+    user.Email = email ? email.toLowerCase() : user.Email;
+    user.Age = age;
+    user.Major = major;
+    user.Bio = bio;
+    user.SexualOrientation = sexualOrientation;
+    user.Gender = gender ? gender.toLowerCase() : user.Gender;
 
-  await user.save();
+    await user.save();
 
-  res.json({ message: "Profile updated" });
+    res.json({ message: "Profile updated" });
+  } catch (err) {
+    res.status(500).json({ msg: "Server error while updating profile"});
+  }
 });
+
+router.post('/update-preferences', async (req, res) => {
+  const userID = req.user;
+  const { minAge, maxAge, interestedIn, interests } = req.body;
+  try{
+    const user = await User.findById(userID);
+    
+    user.MinDatingAge = minAge;
+    user.MaxDatingAge = maxAge;
+    if(interestedIn && Array.isArray(interestedIn)){
+      user.InterestedIn = interestedIn.map(val => val.toLowerCase());
+    }
+    if (interests && Array.isArray(interests)) {
+        user.Interests = interests.map(val => val.toLowerCase());
+    }
+    
+    await user.save();
+
+    res.json({ msg: "Preferences updated"});
+  } catch (err){
+    console.error("Error Details:", err.stack);
+    res.status(500).json({ msg: "Server error while updating preferences"});
+  }
+});
+
 
 // GET PROFILE
 router.get('/:username', async (req, res) => {

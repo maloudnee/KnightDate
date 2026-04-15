@@ -21,6 +21,8 @@ app.use('/api/profile', require('./routes/profile'));
 
 app.use("/api/messages", require("./routes/messages"));
 
+app.use("/api/match", require("./routes/match"));
+
 
 
 const PORT = process.env.PORT || 5000;
