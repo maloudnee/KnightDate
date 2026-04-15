@@ -152,23 +152,27 @@ router.post("/forgot-password", async ( req, res ) => {
   const { email } = req.body;
   const user = await User.findOne({ Email: email });
   if(!user) return res.status(404).json({msg: "User not found."});
-
-  const resetToken = jwt.sign({ id: user_id }, process.env.JWT_SECRET, {expiresIn: "1h"});
-  const url = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-  
-  await transporter.sendMail({
-    to: email,
-    subject: "KnightDate Password Reset",
-    html: `<p>Click <a href="${url}">here</a> to reset your password. This link expires in 1 hour.</p>`
-  });
-  res.json({ msg: "Reset link sent!" });
+  try{
+    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {expiresIn: "1h"});
+    const url = `${process.env.FRONTEND_PASSWORD_RESET_URL}/reset-password/${resetToken}`;
+    
+    await transporter.sendMail({
+      to: email,
+      subject: "KnightDate Password Reset",
+      html: `<p>Click <a href="${url}">here</a> to reset your password. This link expires in 1 hour.</p>`
+    });
+    res.json({ msg: "Reset link sent!" });
+  } catch (err){
+    res.json({msg: "Server issue while sending password reset"});
+  }
 });
 
 // Reset password
 router.post("/reset-password/:token", async (req, res) => {
   const { password } = req.body;
+  const { token } = req.params;
   try {
-    const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const hashedPassword = await bcrypt.hash(password, 10);
     
     await User.findByIdAndUpdate(decoded.id, { password: hashedPassword });

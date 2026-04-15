@@ -89,28 +89,49 @@ router.post("/discover", async (req, res ) => {
         if(!user){
             return res.status(404).json({msg: "User not found"});
         }
+        const genderQuery = user.InterestedIn && user.InterestedIn.length > 0
+        ? {$in: user.InterestedIn} : { $exists: true};
+
+        const mutualInterestQuery = {
+            InterestedIn: { $in: [user.Gender] }
+        };
+
+
         // Set soft specifications to filter out potential matches
         const query = {
             _id: {
                 $ne: userID,
-                $nin: [...user.LikedUsers, ...user.DislikedUsers, ...user.Matches]
+                $nin: [...user.LikedUsers || [], ...user.DislikedUsers || [], ...user.Matches || []]
             },
-            Age: { $gte: user.MinDatingAge, $lte: user.MaxDatingAge },
-            Gender: { $in: user.InterestedIn }
+            Age: { $gte: user.MinDatingAge || 18, $lte: user.MaxDatingAge || 100 },
+            Gender: genderQuery,
+            ...mutualInterestQuery
         };
-        let potentialMatches = await User.find(query);
-        potentialMatches = potentialMatches.map(match => {
 
-            const sharedInterests = potentialMatch.Interests.filter(
-                interest => user.Interests.includes(interest)
+        const potentialMatches = await User.find(query);
+
+        const scoredMatches = potentialMatches.map(match => {
+            const sharedInterests = (match.Interests || []).filter(
+                interest => (user.Interests || []).includes(interest)
             );
+            
             return {
-                ...potentialMatch._doc,
+                _id: match._id,
+                username: match.username,
+                FirstName: match.FirstName,
+                LastName: match.LastName,
+                Age: match.Age,
+                Major: match.Major,
+                Bio: match.Bio,
+                Gender: match.Gender,
+                ProfilePicture: match.ProfilePicture,
+                Interests: match.Interests,
                 score: sharedInterests.length
             };
         });
-        potentialMatches.sort((a, b) => b.score - a.score);
-        res.json(potentialMatches.slice(0,10));
+
+        scoredMatches.sort((a, b) => b.score - a.score);
+        res.json(scoredMatches.slice(0,10));
 
     } catch (err){
         console.error("Error Details:", err.stack);

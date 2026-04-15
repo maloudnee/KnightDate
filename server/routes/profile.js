@@ -34,12 +34,12 @@ router.post('/register-profile', async (req, res) => {
     // update profile fields
     user.FirstName = firstName;
     user.LastName = lastName;
-    user.Email = email;
+    user.Email = email ? email.toLowerCase() : user.Email;
     user.Age = age;
     user.Major = major;
     user.Bio = bio;
     user.SexualOrientation = sexualOrientation;
-    user.Gender = gender;
+    user.Gender = gender ? gender.toLowerCase() : user.Gender;
 
     await user.save();
 
@@ -57,13 +57,18 @@ router.post('/update-preferences', async (req, res) => {
     
     user.MinDatingAge = minAge;
     user.MaxDatingAge = maxAge;
-    user.InterestedIn = interestedIn;
-    user.Interests = interests;
+    if(interestedIn && Array.isArray(interestedIn)){
+      user.InterestedIn = interestedIn.map(val => val.toLowerCase());
+    }
+    if (interests && Array.isArray(interests)) {
+        user.Interests = interests.map(val => val.toLowerCase());
+    }
     
     await user.save();
 
     res.json({ msg: "Preferences updated"});
   } catch (err){
+    console.error("Error Details:", err.stack);
     res.status(500).json({ msg: "Server error while updating preferences"});
   }
 });
