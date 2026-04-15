@@ -92,10 +92,11 @@ router.post("/discover", async (req, res ) => {
         const genderQuery = user.InterestedIn && user.InterestedIn.length > 0
         ? {$in: user.InterestedIn} : { $exists: true};
 
-        const mutualInterestQuery = {
-            InterestedIn: { $in: [user.Gender] }
-        };
 
+
+        // const mutualInterestQuery = {
+        //     InterestedIn: { $in: [user.Gender] }
+        // };
 
         // Set soft specifications to filter out potential matches
         const query = {
@@ -105,7 +106,11 @@ router.post("/discover", async (req, res ) => {
             },
             Age: { $gte: user.MinDatingAge || 18, $lte: user.MaxDatingAge || 100 },
             Gender: genderQuery,
-            ...mutualInterestQuery
+            InterestedIn: { $in: [user.Gender]},
+            MinDatingAge: { $lte: user.Age},
+            MaxDatingAge: { $gte: user.Age},
+            DislikedUsers: {$ne: userID},
+            Matches: { $ne: userID }
         };
 
         const potentialMatches = await User.find(query);
