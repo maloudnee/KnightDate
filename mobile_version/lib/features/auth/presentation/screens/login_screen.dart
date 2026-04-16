@@ -72,6 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (e) {
+      print("Debug: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Server unreachable. Check your connection."))
       );
