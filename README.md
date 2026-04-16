@@ -11,3 +11,190 @@ and faculty of the University of Central Florida. The app was built on the MERN 
 - Profile: A personalized dashboard where users can manage their profile, uploading a new profile picture from their gallery, and view how they may appear to other users
 
 ... (add rest later)
+
+### `api/profile/register-profile`
+
+**Request JSON**
+```json
+{
+  "firstName": "string",
+   "lastName": "string",
+   "email": "string",
+   "age": , int
+   "major": "string",
+   "bio": "string",
+   "sexualOrientation": "string",
+   "gender ": "string",
+}
+```
+**Response JSON**
+```json
+{
+   "message": "string" 
+}
+```
+
+### `api/profile/update-preferences`
+
+**Request JSON**
+```json
+{
+   "minAge": int,
+   "maxAge": int,
+   "interestedIn": ["string", ...],
+   interests "": ["string", ...]
+
+}
+```
+**Response JSON**
+```json
+{
+   "msg": "string" 
+}
+```
+
+### `api/profile/:username`
+
+**Request JSON**
+```json
+{
+}
+```
+**Response JSON**
+```json
+{
+}
+```
+
+### `api/profile/upload-picture`
+
+**Request JSON**
+```json
+{
+   "username": "string"
+}
+```
+**Response JSON**
+```json
+{
+   "message": "string",
+   "path": "string"
+
+}
+```
+
+### `auth/register`
+
+**Request JSON**
+```json
+{
+  "username": "string",
+   "password": "string",
+   "email ": "string"
+
+}
+```
+**Response JSON**
+```json
+{
+   "msg": "string",
+}
+```
+
+### `auth/login`
+
+**Request JSON**
+```json
+{
+  "username": "string",
+   "password": "string"
+}
+```
+**Response JSON**
+```json
+{
+   "token": "string",
+   user:{
+      "_id": int,
+      "username": "string"
+   }
+}
+```
+
+### `api/match/like-user`
+
+**Request JSON**
+```json
+{
+   "targetID": "string"
+}
+```
+**Response JSON**
+```json
+{
+   "msg": "string",
+}
+```
+
+### `api/match/dislike-user`
+
+**Request JSON**
+```json
+{
+   "targetID": "string"
+}
+```
+**Response JSON**
+```json
+{
+   "msg": "string",
+}
+```
+
+### `api/match/match-users`
+
+**Request JSON**
+```json
+{
+   "targetID": "string"
+}
+```
+**Response JSON**
+```json
+{
+   "msg": "string",
+}
+```
+
+### `api/match/discover`
+
+**Request JSON**
+```json
+{
+   //nothing
+}
+```
+**Response JSON**
+```json
+{
+   "scoredMatches": {
+       {
+         "_id": "string",
+         "username": "string",
+         "FirstName": "string",
+         "LastName": "string",
+         "Age": int,
+         "Major": "string",
+         "Bio": "string",
+         "Gender": "string",
+         "ProfilePicture": "string",
+         "Interests": ["string", ...],
+         "score": int
+       }, ...
+
+    }
+}
+```
+
+
+
