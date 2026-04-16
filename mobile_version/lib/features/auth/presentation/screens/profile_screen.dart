@@ -16,10 +16,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic>? userData;
   static const gold = Color(0xFFD4AF37);
 
+  final TextEditingController _bioController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     _loadProfile();
+  }
+
+  @override
+  void dispose() {
+    _bioController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadProfile() async {
@@ -28,7 +36,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final String? token = prefs.getString('token');
 
       final response = await http.get(
-        Uri.parse('http://knightdate.xyz:5000/api/profile'),
+        Uri.parse('http://knightdate.xyz/api/profile'),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token"
@@ -37,6 +45,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (response.statusCode == 200) {
         setState(() {
           userData = json.decode(response.body);
+          _bioController.text = userData?['bio'] ?? '';
           _isLoading = false;
         });
       } 
@@ -46,6 +55,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _updateProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString('token');
+
+    final String currentUsername = userData?['username'] ?? "UnknownUser";
+    final String? _selectedMajor = userData?['Major'] ?? "Undeclared";
+
+    final response = await http.post(
+    Uri.parse('http://knightdate.xyz/api/profile/register-profile'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+    body: jsonEncode({
+      'username': currentUsername,
+      'bio': _bioController.text,
+      'major': _selectedMajor,
+      'profilePicture': userData?['profilePicture'] ?? '',
+      'age': userData?['Age'] ?? 0,
+      'firstName': userData?['FirstName'] ?? '',
+      'lastName': userData?['LastName'] ?? '',
+      'gender': userData?['Gender'] ?? '',
+      'sexualOrientation': userData?['SexualOrientation'] ?? '',
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Profile Updated!")),
+    );
+    _loadProfile(); // Refresh profile data
+  }
+}
+
+  @override
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -214,7 +258,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _handleLogout(BuildContext context) {
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const WelcomeScreen()), // Make sure to import it
+      MaterialPageRoute(builder: (context) => const WelcomeScreen()), 
       (route) => false,
     );
   }
