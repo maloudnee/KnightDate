@@ -24,7 +24,7 @@ and faculty of the University of Central Florida. The app was built on the MERN 
 3. Navigate to `/frontend` and run `npm install`.
 4. To run locally use `npm start` for the server and if you want to test mobile use `flutter run`.
 
-The application is hosted and accessible @ [knightdate.xyz)(https://knightdate.xyz/)
+The application is hosted and accessible @ [knightdate.xyz](https://knightdate.xyz/)
 
 ## Contributors 
 - Maloudnee Marcier 
