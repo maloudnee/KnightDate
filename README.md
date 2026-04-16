@@ -42,7 +42,7 @@ and faculty of the University of Central Florida. The app was built on the MERN 
    "minAge": "int",
    "maxAge": "int",
    "interestedIn": ["string"],
-   interests "": ["string"]
+   "interests": ["string"]
 
 }
 ```
@@ -189,8 +189,7 @@ and faculty of the University of Central Florida. The app was built on the MERN 
          "ProfilePicture": "string",
          "Interests": ["string"],
          "score": "int"
-       }, ...
-
+       }
     }
 }
 ```
