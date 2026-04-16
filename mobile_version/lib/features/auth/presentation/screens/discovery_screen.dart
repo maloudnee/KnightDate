@@ -26,15 +26,16 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       final prefs = await SharedPreferences.getInstance();
       final String? token = prefs.getString('token');
       final response = await http.get(
-        Uri.parse('http://knightdate.xyz/api/discover'),
+        Uri.parse('http://knightdate.xyz/api/match/discover'),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token"
         },
       );
       if (response.statusCode == 200) {
+        final data = json.decode(response.body);
         setState(() {
-          users = json.decode(response.body);
+          users = data['scoredMatches'] ?? [];
           _isLoading = false;
         });
       } else {
@@ -50,7 +51,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   // Record user interactions (like/dislike) and send to backend
-  Future<void> _handleChoice(bool liked, String userId) async {
+  Future<void> _handleChoice(bool liked, String targetID) async {
     final prefs = await SharedPreferences.getInstance();
     final String? token = prefs.getString('token');
 
@@ -58,16 +59,17 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       users.removeAt(0); // Remove the current profile from the list
     });
 
+    final String endpoint = liked ? 'like-user' : 'dislike-user'; 
+
     try {
       await http.post(
-        Uri.parse('http://knightdate.xyz/api/choices'),
+        Uri.parse('http://knightdate.xyz/api/match/$endpoint'),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token"
         },
         body: json.encode({
-          "userId": userId, 
-          "action": liked ? "like" : "dislike"
+          "targetID": targetID
         }),
       );
     } catch (e) {
