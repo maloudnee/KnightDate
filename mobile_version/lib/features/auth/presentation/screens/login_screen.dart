@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      final url = Uri.parse("http://knightdate.xyz:5000/auth/login");
+      final url = Uri.parse("http://knightdate.xyz/api/auth/login");
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
@@ -46,11 +46,13 @@ class _LoginScreenState extends State<LoginScreen> {
         final Map<String, dynamic> responseData = jsonDecode(response.body);  
         final String token = responseData['token']; 
         final String userId = responseData['user']['_id'];
+        final String username = responseData['user']['username'];
 
         // save tokens 
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('jwt_token', token);
-        await prefs.setString('user_id', userId);
+        await prefs.setString('authToken', token);
+        await prefs.setString('userId', userId);
+        await prefs.setString('username', username);
 
         if (mounted) {
           Navigator.of(context).pushReplacement(
@@ -88,16 +90,16 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: Icon(
               Icons.close, 
               color: Theme.of(context).brightness == Brightness.dark 
               ? Colors.white 
-              : Colors.black
+              : Colors.black,
+              size: 32,
             ),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
           )
         ],
       ),

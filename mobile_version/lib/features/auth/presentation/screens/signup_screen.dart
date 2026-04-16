@@ -51,7 +51,6 @@ class _SignupScreenState extends State<SignupScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        automaticallyImplyLeading: false,
         title: Text(
           "Create Account",
           style: TextStyle(
@@ -67,7 +66,8 @@ class _SignupScreenState extends State<SignupScreen> {
               color: 
               isDark 
               ? Colors.white 
-              : Colors.black
+              : Colors.black,
+              size: 32,
             ),
               onPressed: () => Navigator.of(context).pop(),
             ),
@@ -242,7 +242,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     setState(() => _isSubmitting = true);
     
-    var uri = Uri.parse('http://knightdate.xyz:5000/api/signup');
+    var uri = Uri.parse('http://knightdate.xyz/api/auth/register');
 
     var request = http.MultipartRequest('POST', uri);
 
@@ -252,8 +252,8 @@ class _SignupScreenState extends State<SignupScreen> {
     request.fields['Major'] = _majorController.text;
     request.fields['Bio'] = _bioController.text;
     request.fields['Email'] = _emailController.text;
-    request.fields['username'] = _usernameController.text;
-    request.fields['password'] = _passwordController.text;
+    request.fields['Username'] = _usernameController.text;
+    request.fields['Password'] = _passwordController.text;
     request.fields['Gender'] = _selectedGender?.toLowerCase() ?? "";
     request.fields['Orientation'] = _selectedOrientation?.toLowerCase() ?? "";
 
