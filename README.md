@@ -41,8 +41,8 @@ and faculty of the University of Central Florida. The app was built on the MERN 
 {
    "minAge": "int",
    "maxAge": "int",
-   "interestedIn": ["string", ...],
-   interests "": ["string", ...]
+   "interestedIn": ["string"],
+   interests "": ["string"]
 
 }
 ```
@@ -114,7 +114,7 @@ and faculty of the University of Central Florida. The app was built on the MERN 
 ```json
 {
    "token": "string",
-   user:{
+   "user": {
       "_id": "int",
       "username": "string"
    }
@@ -171,7 +171,6 @@ and faculty of the University of Central Florida. The app was built on the MERN 
 **Request JSON**
 ```json
 {
-   //nothing
 }
 ```
 **Response JSON**
@@ -188,7 +187,7 @@ and faculty of the University of Central Florida. The app was built on the MERN 
          "Bio": "string",
          "Gender": "string",
          "ProfilePicture": "string",
-         "Interests": ["string", ...],
+         "Interests": ["string"],
          "score": "int"
        }, ...
 
