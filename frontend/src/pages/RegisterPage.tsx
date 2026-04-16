@@ -8,12 +8,13 @@ import { API_URL } from "../constants";
 export const RegisterPage = ({ onNavigate }: PageProps) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!username || !password) {
+    if (!username || !password || !email) {
       toast.error("Please fill in all fields");
       return;
     }
@@ -25,7 +26,7 @@ export const RegisterPage = ({ onNavigate }: PageProps) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, email }),
       });
 
       const data = await response.json();
@@ -102,6 +103,22 @@ export const RegisterPage = ({ onNavigate }: PageProps) => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+
+            {/* Email Field */}
+            <div className="group">
+              <label className="block text-[10px] uppercase tracking-widest font-semibold text-outline mb-3" htmlFor="email">
+                University Email
+              </label>
+              <input
+                className="w-full bg-transparent border-0 border-b border-outline/30 focus:border-primary focus:ring-0 text-on-surface py-2 px-0 transition-all placeholder:text-outline/20 text-sm outline-none"
+                id="email"
+                placeholder="yourname@university.edu"
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
                 disabled={isLoading}
               />
             </div>
