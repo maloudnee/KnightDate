@@ -242,7 +242,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     setState(() => _isSubmitting = true);
     
-    var uri = Uri.parse('http://knightdate.xyz/api/auth/register');
+    var uri = Uri.parse('https://knightdate.xyz/api/auth/register');
 
     var request = http.MultipartRequest('POST', uri);
 

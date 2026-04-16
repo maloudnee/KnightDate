@@ -49,7 +49,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final String? token = prefs.getString('token');
 
       final response = await http.get(
-        Uri.parse('http://knightdate.xyz/api/profile'),
+        Uri.parse('https://knightdate.xyz/api/profile'),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token"
@@ -75,7 +75,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final String currentUsername = userData?['username'] ?? "UnknownUser";
 
     final response = await http.post(
-      Uri.parse('http://knightdate.xyz/api/profile/register-profile'),
+      Uri.parse('https://knightdate.xyz/api/profile/register-profile'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -115,7 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       var request = http.MultipartRequest(
         'POST', 
-        Uri.parse('http://knightdate.xyz/api/profile/upload-picture')
+        Uri.parse('https://knightdate.xyz/api/profile/upload-picture')
       );
 
       request.headers['Authorization'] = 'Bearer $token';
@@ -178,7 +178,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       radius: 70,
                       backgroundColor: Colors.black,
                       backgroundImage: userData?['ProfilePicture'] != null 
-                        ? NetworkImage("http://knightdate.xyz/${userData!['ProfilePicture']}") 
+                        ? NetworkImage("https://knightdate.xyz/${userData!['ProfilePicture']}") 
                         : const NetworkImage("https://via.placeholder.com/150"),
                     ),
                   ),
@@ -241,7 +241,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       CircleAvatar(
                                         radius: 50,
                                         backgroundImage: userData!['ProfilePicture'] != null 
-                                          ? NetworkImage("http://knightdate.xyz/${userData!['ProfilePicture']}") 
+                                          ? NetworkImage("https://knightdate.xyz/${userData!['ProfilePicture']}") 
                                           : const NetworkImage("https://via.placeholder.com/150"),
                                       ),
                                       const SizedBox(height: 15),

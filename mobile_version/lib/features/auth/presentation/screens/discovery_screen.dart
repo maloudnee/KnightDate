@@ -26,7 +26,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
       final prefs = await SharedPreferences.getInstance();
       final String? token = prefs.getString('token');
       final response = await http.get(
-        Uri.parse('http://knightdate.xyz/api/match/discover'),
+        Uri.parse('https://knightdate.xyz/api/match/discover'),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token"
@@ -63,7 +63,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
 
     try {
       await http.post(
-        Uri.parse('http://knightdate.xyz/api/match/$endpoint'),
+        Uri.parse('https://knightdate.xyz/api/match/$endpoint'),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token"
@@ -113,7 +113,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   Widget _buildUserCard(dynamic user, bool isDark) {
-    final String imageUrl = 'http://knightdate.xyz${user['ProfilePicture']}';
+    final String imageUrl = 'https://knightdate.xyz${user['ProfilePicture']}';
 
     return Container(
       decoration: BoxDecoration(

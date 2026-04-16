@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      final url = Uri.parse("http://knightdate.xyz/api/auth/login");
+      final url = Uri.parse("https://knightdate.xyz/api/auth/login");
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
