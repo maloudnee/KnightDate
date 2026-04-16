@@ -7,7 +7,10 @@ const mongoose = require("mongoose");
 mongoose.set("debug", true);
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'https://knightdate.xyz',
+  credentials: true
+}));
 app.use(express.json());
 
 connectDB();
