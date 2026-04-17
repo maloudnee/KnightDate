@@ -9,6 +9,8 @@ export const LoginPage = ({ onNavigate }: PageProps) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [userEmail, setUserEmail] = useState(""); // For resending verification
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
@@ -19,6 +21,7 @@ export const LoginPage = ({ onNavigate }: PageProps) => {
     }
 
     setIsLoading(true);
+    setNeedsVerification(false);
     try {
       const response = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
@@ -31,9 +34,14 @@ export const LoginPage = ({ onNavigate }: PageProps) => {
       const data = await response.json();
 
       if (response.ok) {
+        toast.success("Login successful!");
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
         onNavigate("dashboard");
+      } else if (response.status === 401 && data.msg?.toLowerCase().includes("verify")) {
+        setNeedsVerification(true);
+        // We might need a way to get the email to resend. 
+        // For now, we suggest entering it or the server should have it if we pass username.
       } else {
         toast.error(data.msg || "Invalid credentials");
       }
@@ -42,6 +50,27 @@ export const LoginPage = ({ onNavigate }: PageProps) => {
       console.error("Login error:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    const email = prompt("Please enter your email to resend the link:");
+    if (!email) return;
+
+    try {
+      const resp = await fetch(`${API_URL}/auth/resend-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const resData = await resp.json();
+      if (resp.ok) {
+        toast.success(resData.msg || "Verification link sent!");
+      } else {
+        toast.error(resData.msg || "Failed to resend link.");
+      }
+    } catch (err) {
+      toast.error("Error sending link.");
     }
   };
 
@@ -95,7 +124,11 @@ export const LoginPage = ({ onNavigate }: PageProps) => {
                 <label className="block text-[10px] uppercase tracking-widest font-semibold text-outline" htmlFor="password">
                   Password
                 </label>
-                <button type="button" className="text-[10px] uppercase tracking-widest font-semibold text-primary/70 hover:text-primary transition-colors">
+                <button 
+                  type="button" 
+                  onClick={() => onNavigate("forgot-password")}
+                  className="text-[10px] uppercase tracking-widest font-semibold text-primary/70 hover:text-primary transition-colors"
+                >
                   Forgot?
                 </button>
               </div>
@@ -109,6 +142,23 @@ export const LoginPage = ({ onNavigate }: PageProps) => {
                 disabled={isLoading}
               />
             </div>
+
+            {needsVerification && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-center"
+              >
+                <p className="text-xs text-red-500 font-medium mb-3">Account not verified yet.</p>
+                <button 
+                  type="button"
+                  onClick={handleResendVerification}
+                  className="text-[10px] uppercase tracking-[0.1em] font-black text-primary hover:underline"
+                >
+                  Send Verification Link
+                </button>
+              </motion.div>
+            )}
 
             {/* Login Button */}
             <div className="pt-6">

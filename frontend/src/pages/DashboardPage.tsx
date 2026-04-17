@@ -1,4 +1,4 @@
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { 
   Search, 
   Compass, 
@@ -9,21 +9,45 @@ import {
   Settings, 
   Shield, 
   Share2,
-  Edit3
+  Edit3,
+  SlidersHorizontal,
+  LogOut
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { PageProps } from "../types";
-import { API_URL } from "../constants";
+import { API_URL, MAJORS } from "../constants";
 
 export const DashboardPage = ({ onNavigate }: PageProps) => {
   const [userData, setUserData] = useState<any>(null);
+  const [showPreferences, setShowPreferences] = useState(false);
+  const [preferences, setPreferences] = useState({
+    major: "",
+    minAge: 18,
+    maxAge: 30
+  });
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setUserData(JSON.parse(storedUser));
     }
+    
+    const storedPrefs = localStorage.getItem("preferences");
+    if (storedPrefs) {
+      setPreferences(JSON.parse(storedPrefs));
+    }
   }, []);
+
+  const savePreferences = () => {
+    localStorage.setItem("preferences", JSON.stringify(preferences));
+    setShowPreferences(false);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    onNavigate("landing");
+  };
 
   const conversations = [
     {
@@ -70,14 +94,12 @@ export const DashboardPage = ({ onNavigate }: PageProps) => {
           <button className="text-on-surface-variant hover:text-primary transition-colors">
             <Search className="w-5 h-5" />
           </button>
-          <div className="w-8 h-8 rounded-full overflow-hidden border border-primary/50 cursor-pointer hover:scale-105 transition-transform">
-            <img 
-              src={userImage} 
-              alt="My Profile" 
-              className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
-            />
-          </div>
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-outline hover:text-yellow-500 transition-colors font-bold uppercase tracking-widest text-[10px]"
+          >
+            <span className="hidden sm:inline">Log out</span>
+          </button>
         </div>
       </header>
 
@@ -96,7 +118,11 @@ export const DashboardPage = ({ onNavigate }: PageProps) => {
                 />
               </div>
               <div>
-                <h2 className="text-on-surface font-bold text-sm">{userData?.FirstName || "My Profile"}</h2>
+                <h2 className="text-on-surface font-bold text-sm">
+                  {userData?.FirstName && userData?.LastName 
+                    ? `${userData.FirstName} ${userData.LastName}` 
+                    : userData?.FirstName || "My Profile"}
+                </h2>
                 <button 
                   onClick={() => onNavigate("edit-profile")}
                   className="text-primary text-[10px] uppercase tracking-widest font-black flex items-center gap-1 hover:opacity-80"
@@ -106,12 +132,24 @@ export const DashboardPage = ({ onNavigate }: PageProps) => {
               </div>
             </div>
             <div className="mt-6">
-              <button className="w-full flex items-center gap-3 bg-white/5 hover:bg-white/10 transition-all p-3 rounded-xl border border-white/5 group">
-                <div className="w-8 h-8 rounded-full gradient-gold flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Compass className="text-background w-4 h-4" />
-                </div>
-                <span className="text-sm font-bold">Discover New Matches</span>
-              </button>
+              <div className="relative group">
+                <button className="w-full flex items-center gap-3 bg-white/5 hover:bg-white/10 transition-all p-3 rounded-xl border border-white/5 pr-12">
+                  <div className="w-8 h-8 rounded-full gradient-gold flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
+                    <Compass className="text-background w-4 h-4" />
+                  </div>
+                  <span className="text-sm font-bold truncate">Discover New Matches</span>
+                </button>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowPreferences(true);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-outline hover:text-primary transition-colors z-10"
+                  title="Preferences"
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -186,6 +224,7 @@ export const DashboardPage = ({ onNavigate }: PageProps) => {
             <button className="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center text-red-500 shadow-xl hover:scale-110 active:scale-95 transition-all border border-outline-variant/10">
               <X className="w-8 h-8" />
             </button>
+            
             {/* Like */}
             <button className="w-16 h-16 rounded-full gradient-gold flex items-center justify-center text-background shadow-xl hover:scale-110 active:scale-95 transition-all">
               <Heart className="w-8 h-8 fill-background" />
@@ -209,6 +248,92 @@ export const DashboardPage = ({ onNavigate }: PageProps) => {
           />
         </div>
       </nav>
+
+      {/* Preferences Modal */}
+      <AnimatePresence>
+        {showPreferences && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowPreferences(false)}
+              className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="w-full max-w-md bg-surface-container-low border border-primary/20 rounded-3xl p-8 shadow-2xl relative z-10"
+            >
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-xl font-black italic tracking-tighter text-primary uppercase">Matching Preferences</h2>
+                <button 
+                  onClick={() => setShowPreferences(false)}
+                  className="text-outline hover:text-primary transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-8">
+                {/* Major Preference */}
+                <div className="group">
+                  <label className="block text-[10px] uppercase tracking-widest font-semibold text-outline mb-3">Preferred Major</label>
+                  <select 
+                    className="w-full bg-transparent border-0 border-b border-outline/30 focus:border-primary focus:ring-0 text-on-surface py-2 px-0 transition-all text-sm outline-none appearance-none"
+                    value={preferences.major}
+                    onChange={(e) => setPreferences({...preferences, major: e.target.value})}
+                  >
+                    <option value="" className="bg-surface">Any Major</option>
+                    {MAJORS.map((major) => (
+                      <option key={major} value={major} className="bg-surface">{major}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Age Preference */}
+                <div className="group">
+                  <label className="block text-[10px] uppercase tracking-widest font-semibold text-outline mb-3">Age Range</label>
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1">
+                      <input 
+                        type="number" 
+                        min="18" 
+                        max="99"
+                        className="w-full bg-transparent border-0 border-b border-outline/30 focus:border-primary focus:ring-0 text-on-surface py-2 px-0 transition-all text-sm outline-none"
+                        value={preferences.minAge}
+                        onChange={(e) => setPreferences({...preferences, minAge: parseInt(e.target.value)})}
+                        placeholder="Min"
+                      />
+                      <span className="text-[8px] uppercase tracking-widest text-outline/50 mt-1 block">Min Age</span>
+                    </div>
+                    <div className="flex-1">
+                      <input 
+                        type="number" 
+                        min="18" 
+                        max="99"
+                        className="w-full bg-transparent border-0 border-b border-outline/30 focus:border-primary focus:ring-0 text-on-surface py-2 px-0 transition-all text-sm outline-none"
+                        value={preferences.maxAge}
+                        onChange={(e) => setPreferences({...preferences, maxAge: parseInt(e.target.value)})}
+                        placeholder="Max"
+                      />
+                      <span className="text-[8px] uppercase tracking-widest text-outline/50 mt-1 block">Max Age</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={savePreferences}
+                  className="gradient-gold w-full py-4 rounded-full text-background font-black text-xs tracking-[0.3em] uppercase hover:shadow-[0_0_20px_rgba(242,204,0,0.3)] transition-all active:scale-95"
+                >
+                  Save Preferences
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

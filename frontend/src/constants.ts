@@ -1,1 +1,36 @@
 export const API_URL = import.meta.env.VITE_API_URL;
+
+export const MAJORS = [
+  "Accounting",
+  "Architecture",
+  "Art History",
+  "Biology",
+  "Business Administration",
+  "Chemistry",
+  "Civil Engineering",
+  "Communications",
+  "Computer Science",
+  "Computer Engineering",
+  "Criminal Justice",
+  "Economics",
+  "Education",
+  "Electrical Engineering",
+  "English Literature",
+  "Environmental Science",
+  "Finance",
+  "Graphic Design",
+  "History",
+  "Journalism",
+  "Marketing",
+  "Mathematics",
+  "Mechanical Engineering",
+  "Music",
+  "Nursing",
+  "Philosophy",
+  "Physics",
+  "Political Science",
+  "Psychology",
+  "Sociology",
+  "Theater"
+].sort();
+>>>>>>> 1653abb947811773c32df3dddb063b2d2153022b
