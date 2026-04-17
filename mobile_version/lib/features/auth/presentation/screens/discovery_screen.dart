@@ -24,46 +24,45 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   Future<void> _fetchUsers() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final String? token = prefs.getString('token');
-      final response = await http.get(
-        Uri.parse('https://knightdate.xyz/api/match/discover'),
+      final String? token = prefs.getString('authToken');
+      
+      final response = await http.post(
+        Uri.parse('https://knightdate.xyz/api/api/match/discover'), 
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token"
         },
       );
+
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final List<dynamic> data = json.decode(response.body); 
         setState(() {
-          users = data['scoredMatches'] ?? [];
+          users = data; 
           _isLoading = false;
         });
       } else {
-        throw Exception('Failed to load users');
+        print("Discovery failed: ${response.statusCode}");
+        setState(() => _isLoading = false);
       }
     } catch (e) {
+      print("Discovery Error: $e");
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("An error occurred while fetching users."))
-      );
-      print("Error fetching users: $e");
     }
   }
 
-  // Record user interactions (like/dislike) and send to backend
   Future<void> _handleChoice(bool liked, String targetID) async {
     final prefs = await SharedPreferences.getInstance();
-    final String? token = prefs.getString('token');
+    final String? token = prefs.getString('authToken');
 
     setState(() {
-      users.removeAt(0); // Remove the current profile from the list
+      users.removeAt(0);
     });
 
     final String endpoint = liked ? 'like-user' : 'dislike-user'; 
 
     try {
       await http.post(
-        Uri.parse('https://knightdate.xyz/api/match/$endpoint'),
+        Uri.parse('https://knightdate.xyz/api/api/match/$endpoint'),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token"
@@ -165,7 +164,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                   Text(
                     "${user['FirstName']}, ${user['Age']}",
                     style: TextStyle(
-                      color: Colors.white,
+                      color: isDark ? Colors.white : Colors.black, // Dynamic Color
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                     ),
@@ -183,7 +182,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: isDark ? Colors.white70 : Colors.black87,
+                      color: isDark ? Colors.white70 : Colors.black87, // Dynamic Color
                       fontSize: 16,
                     ),
                   ),
