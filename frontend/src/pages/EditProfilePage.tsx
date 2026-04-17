@@ -296,9 +296,9 @@ export const EditProfilePage = ({ onNavigate }: PageProps) => {
                   id="sexualOrientation" value={formData.sexualOrientation} onChange={handleInputChange}
                 >
                   <option value="" className="bg-surface">Select Orientation</option>
-                  <option value="straight" className="bg-surface">Straight</option>
-                  <option value="gay" className="bg-surface">Gay</option>
-                  <option value="bi" className="bg-surface">Bi</option>
+                  <option value="Straight" className="bg-surface">Straight</option>
+                  <option value="Gay" className="bg-surface">Gay</option>
+                  <option value="Bi" className="bg-surface">Bi</option>
                 </select>
               </div>
             </div>

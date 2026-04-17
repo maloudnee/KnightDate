@@ -49,6 +49,24 @@ router.post("/dislike-user", async ( req, res ) => {
     }
 });
 
+
+//get all user's matches
+router.get("/get-matches", async (req, res) => {
+    const userID = req.user;
+    try{
+        const user = await User.findById(userID);
+        if(!user){
+            return res.status(404).json({ msg: "User was not found" });
+        }
+        const matches = await User.find({
+            _id: { $in: user.Matches }
+        }).select("username FirstName LastName Major Profilepicture Bio Interests");
+        res.status(200).json(matches);
+    } catch ( err ){
+        res.status(500).json({msg: "Server error while getting matches"});
+    } 
+});
+
 // Checks if match between two users exists
 router.post("/match-users", async ( req, res ) => {
     const { targetID } = req.body;

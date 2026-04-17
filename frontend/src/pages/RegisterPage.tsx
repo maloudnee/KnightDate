@@ -9,7 +9,6 @@ export const RegisterPage = ({ onNavigate }: PageProps) => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
@@ -136,7 +135,6 @@ export const RegisterPage = ({ onNavigate }: PageProps) => {
               />
             </div>
 
-
             {/* Password Field */}
             <div className="group">
               <div className="flex justify-between items-end mb-3">
@@ -151,22 +149,6 @@ export const RegisterPage = ({ onNavigate }: PageProps) => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-
-            {/* Email Field */}
-            <div className="group">
-              <label className="block text-[10px] uppercase tracking-widest font-semibold text-outline mb-3" htmlFor="email">
-                University Email
-              </label>
-              <input
-                className="w-full bg-transparent border-0 border-b border-outline/30 focus:border-primary focus:ring-0 text-on-surface py-2 px-0 transition-all placeholder:text-outline/20 text-sm outline-none"
-                id="email"
-                placeholder="yourname@university.edu"
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
                 disabled={isLoading}
               />
             </div>

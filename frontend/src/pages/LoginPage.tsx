@@ -34,7 +34,6 @@ export const LoginPage = ({ onNavigate }: PageProps) => {
       const data = await response.json();
 
       if (response.ok) {
-        toast.success("Login successful!");
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
         onNavigate("dashboard");
