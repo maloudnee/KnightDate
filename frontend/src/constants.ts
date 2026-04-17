@@ -1,1 +1,35 @@
-export const API_URL = "https://knightdate.xyz";
+export const API_URL = "http://localhost:5000";
+
+export const MAJORS = [
+  "Accounting",
+  "Architecture",
+  "Art History",
+  "Biology",
+  "Business Administration",
+  "Chemistry",
+  "Civil Engineering",
+  "Communications",
+  "Computer Science",
+  "Computer Engineering",
+  "Criminal Justice",
+  "Economics",
+  "Education",
+  "Electrical Engineering",
+  "English Literature",
+  "Environmental Science",
+  "Finance",
+  "Graphic Design",
+  "History",
+  "Journalism",
+  "Marketing",
+  "Mathematics",
+  "Mechanical Engineering",
+  "Music",
+  "Nursing",
+  "Philosophy",
+  "Physics",
+  "Political Science",
+  "Psychology",
+  "Sociology",
+  "Theater"
+].sort();

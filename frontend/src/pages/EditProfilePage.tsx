@@ -3,7 +3,7 @@ import { ArrowLeft, Camera, Loader2, Save } from "lucide-react";
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import { toast } from "sonner";
 import { PageProps } from "../types";
-import { API_URL } from "../constants";
+import { API_URL, MAJORS } from "../constants";
 
 export const EditProfilePage = ({ onNavigate }: PageProps) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -58,8 +58,12 @@ export const EditProfilePage = ({ onNavigate }: PageProps) => {
 
     setIsUploading(true);
     try {
-      const response = await fetch(`${API_URL}/upload-picture`, {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_URL}/api/profile/upload-picture`, {
         method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        },
         body: formData,
       });
 
@@ -92,9 +96,13 @@ export const EditProfilePage = ({ onNavigate }: PageProps) => {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_URL}/register-profile`, {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_URL}/api/profile/register-profile`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ ...formData, username }),
       });
 
@@ -106,7 +114,17 @@ export const EditProfilePage = ({ onNavigate }: PageProps) => {
         const storedUser = localStorage.getItem("user");
         if (storedUser) {
           const user = JSON.parse(storedUser);
-          const updatedUser = { ...user, ...formData };
+          const updatedUser = { 
+            ...user, 
+            FirstName: formData.firstName,
+            LastName: formData.lastName,
+            Email: formData.email,
+            Age: formData.age,
+            Major: formData.major,
+            Bio: formData.bio,
+            SexualOrientation: formData.sexualOrientation,
+            Gender: formData.gender
+          };
           localStorage.setItem("user", JSON.stringify(updatedUser));
         }
         
@@ -203,10 +221,15 @@ export const EditProfilePage = ({ onNavigate }: PageProps) => {
             {/* Major */}
             <div className="group">
               <label className="block text-[10px] uppercase tracking-widest font-semibold text-outline mb-3" htmlFor="major">Academic Major</label>
-              <input 
-                className="w-full bg-transparent border-0 border-b border-outline/30 focus:border-primary focus:ring-0 text-on-surface py-2 px-0 transition-all text-sm outline-none"
-                id="major" type="text" value={formData.major} onChange={handleInputChange} placeholder="e.g. Computer Science"
-              />
+              <select 
+                className="w-full bg-transparent border-0 border-b border-outline/30 focus:border-primary focus:ring-0 text-on-surface py-2 px-0 transition-all text-sm outline-none appearance-none"
+                id="major" value={formData.major} onChange={handleInputChange}
+              >
+                <option value="" className="bg-surface">Select Major</option>
+                {MAJORS.map((major) => (
+                  <option key={major} value={major} className="bg-surface">{major}</option>
+                ))}
+              </select>
             </div>
 
             {/* Bio */}
@@ -229,8 +252,6 @@ export const EditProfilePage = ({ onNavigate }: PageProps) => {
                   <option value="" className="bg-surface">Select Gender</option>
                   <option value="Male" className="bg-surface">Male</option>
                   <option value="Female" className="bg-surface">Female</option>
-                  <option value="Non-binary" className="bg-surface">Non-binary</option>
-                  <option value="Other" className="bg-surface">Other</option>
                 </select>
               </div>
               {/* Sexual Orientation */}
@@ -243,10 +264,7 @@ export const EditProfilePage = ({ onNavigate }: PageProps) => {
                   <option value="" className="bg-surface">Select Orientation</option>
                   <option value="Straight" className="bg-surface">Straight</option>
                   <option value="Gay" className="bg-surface">Gay</option>
-                  <option value="Bisexual" className="bg-surface">Bisexual</option>
-                  <option value="Pansexual" className="bg-surface">Pansexual</option>
-                  <option value="Asexual" className="bg-surface">Asexual</option>
-                  <option value="Other" className="bg-surface">Other</option>
+                  <option value="Bi" className="bg-surface">Bi</option>
                 </select>
               </div>
             </div>
