@@ -17,12 +17,15 @@ const transporter = nodemailer.createTransport({
 // REGISTER
 router.post("/register", async (req, res) => {
   const { username, password, email } = req.body;
+  if (!email || typeof email !== 'string' || !email.trim()) {
+    return res.status(400).json({ msg: "Email is required" });
+  }
 
   try {
     const userExists = await User.findOne({ username });
     if (userExists) return res.status(400).json({ msg: "Username is already taken" });
 
-    const emailExists = await User.findOne({ email });
+    const emailExists = await User.findOne({ Email: email });
     if (emailExists) return res.status(400).json({ msg: "Email is already taken" });
 
     const hashed = await bcrypt.hash(password, 10);
