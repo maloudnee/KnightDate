@@ -14,8 +14,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
   List<dynamic> newMatches = [];
   List<dynamic> activeChats = [];
   bool _isLoading = true;
-  final TextEditingController _searchController = TextEditingController();
-  List<dynamic> filteredChats = [];
 
   static const gold = Color(0xFFD4AF37);
 
@@ -32,7 +30,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       final String? userId = prefs.getString('userId');
       final String? token = prefs.getString('authToken');
 
-      final String url = "https://knightdate.xyz/api/messages/inbox/$userId";
+      final String url = "https://knightdate.xyz/api/api/messages/inbox/$userId";
 
       final response = await http.get(
         Uri.parse(url),
@@ -62,7 +60,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       final String? senderId = prefs.getString('userId');
       final String? token = prefs.getString('authToken');
 
-      final String url = "https://knightdate.xyz/api/messages/send";
+      final String url = "https://knightdate.xyz/api/api/messages/send";
 
       final response = await http.post(
         Uri.parse(url),
@@ -87,19 +85,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
     }
   }
 
-  void _filterMessages(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        filteredChats = activeChats;
-      } else {
-        filteredChats = activeChats.where((chat) {
-          final name = chat['FirstName'].toString().toLowerCase();
-          return name.contains(query.toLowerCase());
-        }).toList();
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
@@ -116,27 +101,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
         ? const Center(child: CircularProgressIndicator(color: gold))
         : CustomScrollView(
             slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: _filterMessages, 
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: "Search conversations...",
-                      hintStyle: const TextStyle(color: Colors.white54),
-                      prefixIcon: const Icon(Icons.search, color: gold),
-                      filled: true,
-                      fillColor: Colors.white10,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -307,7 +271,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final String? token = prefs.getString('authToken');
 
       final response = await http.post(
-        Uri.parse("https://knightdate.xyz/api/messages/send"),
+        Uri.parse("https://knightdate.xyz/api/api/messages/send"),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -337,7 +301,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final String? token = prefs.getString('authToken');
 
     final response = await http.get(
-      Uri.parse("https://knightdate.xyz/api/messages/conversation/${widget.recieverId}/$userId"),
+      Uri.parse("https://knightdate.xyz/api/api/messages/conversation/${widget.recieverId}/$userId"),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',

@@ -36,16 +36,19 @@ class _LoginScreenState extends State<LoginScreen> {
         url,
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
-          "username": _usernameController.text, 
-          "password": _passwordController.text
+          "username": _usernameController.text.trim(), 
+          "password": _passwordController.text.trim()
         }),
       );
+
+      print("DEBUG STATUS: ${response.statusCode}");
+      print("DEBUG BODY: ${response.body}");
 
       if (response.statusCode == 200) {
         // parse response to get JWT 
         final Map<String, dynamic> responseData = jsonDecode(response.body);  
         final String token = responseData['token']; 
-        final String userId = responseData['user']['_id'];
+        final String userId = responseData['user']['_id'].toString();
         final String username = responseData['user']['username'];
 
         // save tokens 
@@ -66,9 +69,10 @@ class _LoginScreenState extends State<LoginScreen> {
       } else {
         // Handle login failure 
         final errorData = jsonDecode(response.body);
+        String errorMessage = errorData['msg'] ?? "An error occurred";
         print("Login failed: ${errorData['message']}");
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Invalid email or password"))
+          SnackBar(content: Text(errorMessage))
         );
       }
     } catch (e) {
@@ -91,18 +95,12 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.close, 
-              color: Theme.of(context).brightness == Brightness.dark 
-              ? Colors.white 
-              : Colors.black,
-              size: 32,
-            ),
-            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-          )
-        ],
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back, 
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Center(
         child: SingleChildScrollView(

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -14,15 +15,7 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   File? _profileImage;
   final ImagePicker _picker = ImagePicker();
-
-  Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-    if (pickedFile != null) {
-      setState(() {
-        _profileImage = File(pickedFile.path);
-      });
-    }
-  }
+  bool _isSubmitting = false;
 
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
@@ -35,12 +28,102 @@ class _SignupScreenState extends State<SignupScreen> {
 
   String? _selectedGender;
   String? _selectedOrientation;
-  bool _isSubmitting = false;
 
-  final List<String> _genderOption = ['Male', 'Female', 'Non-binary', 'Transgender', 'Other'];
+  final List<String> _genderOption = ['Man', 'Woman', 'Non-binary', 'Transgender', 'Other'];
   final List<String> _orientationOption = ['Straight', 'Gay', 'Lesbian', 'Bisexual', 'Pansexual', 'Asexual', 'Other'];
 
   static const gold = Color(0xFFD4AF38);
+
+  Future<void> _pickImage() async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<void> _submit() async {
+    if (_firstNameController.text.isEmpty ||
+        _lastNameController.text.isEmpty ||
+        _ageController.text.isEmpty ||
+        _majorController.text.isEmpty ||
+        _bioController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _usernameController.text.isEmpty ||
+        _passwordController.text.isEmpty ||
+        _selectedGender == null ||
+        _selectedOrientation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill in all fields"), backgroundColor: Colors.redAccent)
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      final authResponse = await http.post(
+        Uri.parse('https://knightdate.xyz/api/auth/register'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "username": _usernameController.text.trim(),
+          "password": _passwordController.text.trim(),
+          "email": _emailController.text.trim().toLowerCase(),
+        }),
+      );
+
+      if (authResponse.statusCode == 200 || authResponse.statusCode == 201) {
+        
+        await http.post(
+          Uri.parse('https://knightdate.xyz/api/api/profile/register-profile'),
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode({
+            "username": _usernameController.text.trim(),
+            "firstName": _firstNameController.text.trim(),
+            "lastName": _lastNameController.text.trim(),
+            "age": int.tryParse(_ageController.text) ?? 18,
+            "major": _majorController.text.trim(),
+            "bio": _bioController.text.trim(),
+            "gender": _selectedGender?.toLowerCase(),
+            "sexualOrientation": _selectedOrientation?.toLowerCase(),
+          }),
+        );
+
+        if (_profileImage != null) {
+          var request = http.MultipartRequest(
+            'POST',
+            Uri.parse('https://knightdate.xyz/api/api/profile/upload-picture'),
+          );
+          request.fields['username'] = _usernameController.text.trim();
+          request.files.add(await http.MultipartFile.fromPath(
+            'profilePicture',
+            _profileImage!.path,
+            contentType: MediaType('image', 'jpeg'),
+          ));
+          await request.send();
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Account created! Verify your email to log in."), backgroundColor: Colors.green)
+          );
+          Navigator.of(context).pop();
+        }
+      } else {
+        final errorData = jsonDecode(authResponse.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorData['msg'] ?? "Signup failed"), backgroundColor: Colors.redAccent)
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Server error. Please try again later."))
+      );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,24 +136,13 @@ class _SignupScreenState extends State<SignupScreen> {
         elevation: 0,
         title: Text(
           "Create Account",
-          style: TextStyle(
-            color: isDark ? Colors.white : Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 20, fontWeight: FontWeight.w600),
         ),
         actions: [
           IconButton(
-            icon: Icon(
-              Icons.close,
-              color: 
-              isDark 
-              ? Colors.white 
-              : Colors.black,
-              size: 32,
-            ),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
+            icon: Icon(Icons.close, color: isDark ? Colors.white : Colors.black, size: 32),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ],
       ),
       body: ListView(
@@ -85,9 +157,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     radius: 60,
                     backgroundColor: isDark ? Colors.white10 : Colors.white70,
                     backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
-                    child: _profileImage == null
-                      ? Icon(Icons.camera_alt_outlined, size: 40, color: gold)
-                      : null,
+                    child: _profileImage == null ? Icon(Icons.camera_alt_outlined, size: 40, color: gold) : null,
                   ),
                   Positioned(
                     bottom: 0,
@@ -98,12 +168,11 @@ class _SignupScreenState extends State<SignupScreen> {
                       child: const Icon(Icons.edit, size: 16, color: Colors.black),
                     ),
                   )
-                ]
-              )
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 30),
-
           _buildTextField(controller: _firstNameController, label: "First Name"),
           const SizedBox(height: 12),
           _buildTextField(controller: _lastNameController, label: "Last Name"),
@@ -120,30 +189,10 @@ class _SignupScreenState extends State<SignupScreen> {
           const SizedBox(height: 12),
           _buildTextField(controller: _passwordController, label: "Password", obscureText: true),
           const SizedBox(height: 12),
-          _buildDropdown(
-            hint: "Gender",
-            value: _selectedGender,
-            items: _genderOption,
-            onChanged: (value) {
-              setState(() {
-                _selectedGender = value;
-              });
-            },
-          ),
+          _buildDropdown(hint: "Gender", value: _selectedGender, items: _genderOption, onChanged: (v) => setState(() => _selectedGender = v)),
           const SizedBox(height: 12),
-          _buildDropdown(
-            hint: "Orientation",
-            value: _selectedOrientation,
-            items: _orientationOption,
-            onChanged: (value) {
-              setState(() {
-                _selectedOrientation = value;
-              });
-            },
-          ),
+          _buildDropdown(hint: "Orientation", value: _selectedOrientation, items: _orientationOption, onChanged: (v) => setState(() => _selectedOrientation = v)),
           const SizedBox(height: 30),
-
-          // Sign Up Button
           ElevatedButton(
             onPressed: _isSubmitting ? null : _submit,
             style: ElevatedButton.styleFrom(
@@ -153,15 +202,8 @@ class _SignupScreenState extends State<SignupScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             child: _isSubmitting 
-              ? const SizedBox(
-                  width: 24, 
-                  height: 24, 
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
-                )
-              : const Text(
-                  "Create Account",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
+              ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+              : const Text("Create Account", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           ),
           const SizedBox(height: 40),
         ],
@@ -169,15 +211,8 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    bool obscureText = false,
-    TextInputType keyboardType = TextInputType.text,
-    int maxLines = 1,
-  }) {
+  Widget _buildTextField({required TextEditingController controller, required String label, bool obscureText = false, TextInputType keyboardType = TextInputType.text, int maxLines = 1}) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
-
     return TextField(
       controller: controller,
       obscureText: obscureText,
@@ -189,105 +224,26 @@ class _SignupScreenState extends State<SignupScreen> {
         labelStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
         filled: true,
         fillColor: isDark ? Colors.white10 : Colors.white70,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
       ),
     );
   }
 
-  Widget _buildDropdown({
-    required String? value,
-    required List<String> items,
-    required ValueChanged<String?> onChanged, 
-    required String hint,
-  }) {
+  Widget _buildDropdown({required String? value, required List<String> items, required ValueChanged<String?> onChanged, required String hint}) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white10 : Colors.white70,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white54),
-      ),
+      decoration: BoxDecoration(color: isDark ? Colors.white10 : Colors.white70, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white24)),
       child: DropdownButton<String>(
         value: value,
+        hint: Text(hint, style: TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
         isExpanded: true,
         underline: const SizedBox(),
+        dropdownColor: isDark ? Colors.grey[900] : Colors.white,
         icon: Icon(Icons.arrow_drop_down, color: isDark ? Colors.white70 : Colors.black54),
-        items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+        items: items.map((item) => DropdownMenuItem(value: item, child: Text(item, style: TextStyle(color: isDark ? Colors.white : Colors.black)))).toList(),
         onChanged: onChanged,
       ),
     );
-  }
-
-  Future<void> _submit() async {
-    if (_firstNameController.text.isEmpty ||
-        _lastNameController.text.isEmpty ||
-        _ageController.text.isEmpty ||
-        _majorController.text.isEmpty ||
-        _bioController.text.isEmpty ||
-        _emailController.text.isEmpty ||
-        _usernameController.text.isEmpty ||
-        _passwordController.text.isEmpty ||
-        _selectedGender == null ||
-        _selectedOrientation == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill in all fields"))
-      );
-      return;
-    }
-
-    setState(() => _isSubmitting = true);
-    
-    var uri = Uri.parse('https://knightdate.xyz/api/auth/register');
-
-    var request = http.MultipartRequest('POST', uri);
-
-    request.fields['FirstName'] = _firstNameController.text;
-    request.fields['LastName'] = _lastNameController.text;
-    request.fields['Age'] = _ageController.text;
-    request.fields['Major'] = _majorController.text;
-    request.fields['Bio'] = _bioController.text;
-    request.fields['Email'] = _emailController.text;
-    request.fields['Username'] = _usernameController.text;
-    request.fields['Password'] = _passwordController.text;
-    request.fields['Gender'] = _selectedGender?.toLowerCase() ?? "";
-    request.fields['Orientation'] = _selectedOrientation?.toLowerCase() ?? "";
-
-    if (_profileImage != null) {
-      request.files.add(await http.MultipartFile.fromPath('ProfilePicture', _profileImage!.path));
-    }
-
-    try {
-      var streamedResponse = await request.send();
-      var response = await http.Response.fromStream(streamedResponse);
-
-      if (response.statusCode == 200) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Account created successfully! Please verify your email before logging in."))
-          );
-          Navigator.of(context).pop();
-        }
-      } else {
-        // Handle error response
-        final errorData = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorData['message'] ?? "Failed to create account. Please try again."))
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Server unreachable. Check your connection."))
-      );
-      print("Signup error: $e");
-    } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);  
-      }
-    }
   }
 }
