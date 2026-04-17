@@ -37,7 +37,7 @@ export const Hero = ({ onNavigate }: PageProps) => {
           <div className="space-y-4 pt-12">
             <div className="rounded-2xl overflow-hidden h-64 shadow-2xl prestige-border">
               <img 
-                src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=600&h=800&q=80" 
+                src="https://images.unsplash.com/photo-1591711696773-c4b7fe4d3d74?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZGF0aW5nfGVufDB8fDB8fHww" 
                 alt="Campus Couple" 
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
@@ -56,7 +56,7 @@ export const Hero = ({ onNavigate }: PageProps) => {
           <div className="space-y-4">
             <div className="rounded-2xl overflow-hidden h-80 shadow-2xl prestige-border">
               <img 
-                src="https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=600&h=800&q=80" 
+                src="https://images.unsplash.com/photo-1644446770253-5c6b45c38ba8?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
                 alt="Coffee Date" 
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
@@ -64,7 +64,7 @@ export const Hero = ({ onNavigate }: PageProps) => {
             </div>
             <div className="rounded-2xl overflow-hidden h-48 shadow-lg prestige-border">
               <img 
-                src="https://images.unsplash.com/photo-1523240715630-9918c1381e5b?auto=format&fit=crop&w=600&h=400&q=80" 
+                src="https://images.unsplash.com/photo-1578641214267-c33356f49df2?q=80&w=2342&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
                 alt="Students Laughing" 
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"

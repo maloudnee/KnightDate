@@ -28,7 +28,8 @@ export const EditProfilePage = ({ onNavigate }: PageProps) => {
     if (storedUser) {
       const user = JSON.parse(storedUser);
       setUsername(user.username);
-      // Pre-fill if data exists in the user object
+      
+      // Initial pre-fill from localStorage for immediate feedback
       setFormData({
         firstName: user.FirstName || "",
         lastName: user.LastName || "",
@@ -39,7 +40,40 @@ export const EditProfilePage = ({ onNavigate }: PageProps) => {
         sexualOrientation: user.SexualOrientation || "",
         gender: user.Gender || "",
       });
-      setProfilePicture(user.ProfilePicture ? `${API_URL}${user.ProfilePicture}` : null);
+      setProfilePicture(user.ProfilePicture && user.ProfilePicture !== "/default.png" ? `${API_URL}${user.ProfilePicture}` : null);
+
+      // Fetch fresh data from backend
+      const fetchFullProfile = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const response = await fetch(`${API_URL}/api/profile/${user.username}`, {
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          });
+          const data = await response.json();
+          if (response.ok) {
+            setFormData({
+              firstName: data.FirstName || "",
+              lastName: data.LastName || "",
+              email: data.Email || "",
+              age: data.Age || "",
+              major: data.Major || "",
+              bio: data.Bio || "",
+              sexualOrientation: data.SexualOrientation || "",
+              gender: data.Gender || "",
+            });
+            setProfilePicture(data.ProfilePicture && data.ProfilePicture !== "/default.png" ? `${API_URL}${data.ProfilePicture}` : null);
+            
+            // Sync local storage to keep it updated
+            localStorage.setItem("user", JSON.stringify(data));
+          }
+        } catch (error) {
+          console.error("Error fetching full profile:", error);
+        }
+      };
+
+      fetchFullProfile();
     }
   }, []);
 
@@ -250,8 +284,8 @@ export const EditProfilePage = ({ onNavigate }: PageProps) => {
                   id="gender" value={formData.gender} onChange={handleInputChange}
                 >
                   <option value="" className="bg-surface">Select Gender</option>
-                  <option value="Male" className="bg-surface">Male</option>
-                  <option value="Female" className="bg-surface">Female</option>
+                  <option value="male" className="bg-surface">Male</option>
+                  <option value="female" className="bg-surface">Female</option>
                 </select>
               </div>
               {/* Sexual Orientation */}
@@ -262,9 +296,9 @@ export const EditProfilePage = ({ onNavigate }: PageProps) => {
                   id="sexualOrientation" value={formData.sexualOrientation} onChange={handleInputChange}
                 >
                   <option value="" className="bg-surface">Select Orientation</option>
-                  <option value="Straight" className="bg-surface">Straight</option>
-                  <option value="Gay" className="bg-surface">Gay</option>
-                  <option value="Bi" className="bg-surface">Bi</option>
+                  <option value="straight" className="bg-surface">Straight</option>
+                  <option value="gay" className="bg-surface">Gay</option>
+                  <option value="bi" className="bg-surface">Bi</option>
                 </select>
               </div>
             </div>

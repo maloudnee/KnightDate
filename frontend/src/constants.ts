@@ -33,3 +33,24 @@ export const MAJORS = [
   "Sociology",
   "Theater"
 ].sort();
+
+export const COMMON_INTERESTS = [
+  "Gaming",
+  "Hiking",
+  "Photography",
+  "Cooking",
+  "Movies",
+  "Reading",
+  "Fitness",
+  "Traveling",
+  "Music",
+  "Art",
+  "Tech",
+  "Fashion",
+  "Sports",
+  "Coffee",
+  "Dancing",
+  "Writing",
+  "Baking",
+  "Anime"
+].sort();

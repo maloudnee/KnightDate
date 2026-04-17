@@ -11,25 +11,65 @@ import {
   Share2,
   Edit3,
   SlidersHorizontal,
-  LogOut
+  LogOut,
+  Check
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { PageProps } from "../types";
-import { API_URL, MAJORS } from "../constants";
+import { API_URL, MAJORS, COMMON_INTERESTS } from "../constants";
+import { toast } from "sonner";
 
 export const DashboardPage = ({ onNavigate }: PageProps) => {
   const [userData, setUserData] = useState<any>(null);
   const [showPreferences, setShowPreferences] = useState(false);
+  const [isLoadingPrefs, setIsLoadingPrefs] = useState(false);
   const [preferences, setPreferences] = useState({
-    major: "",
+    interestedIn: "both", // male, female, both
     minAge: 18,
-    maxAge: 30
+    maxAge: 30,
+    interests: [] as string[]
   });
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      setUserData(JSON.parse(storedUser));
+      const user = JSON.parse(storedUser);
+      setUserData(user);
+
+      // Map InterestedIn back to choice
+      const interestedInArray = user.InterestedIn || [];
+      let choice = "both";
+      if (interestedInArray.length === 1) {
+        choice = interestedInArray[0].toLowerCase();
+      }
+
+      setPreferences({
+        interestedIn: choice,
+        minAge: user.MinDatingAge || 18,
+        maxAge: user.MaxDatingAge || 30,
+        interests: user.Interests || []
+      });
+
+      // Fetch latest profile data to ensure dashboard is up to date
+      const syncProfile = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const response = await fetch(`${API_URL}/api/profile/${user.username}`, {
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          });
+          const data = await response.json();
+          if (response.ok) {
+            setUserData(data);
+            localStorage.setItem("user", JSON.stringify(data));
+          }
+        } catch (error) {
+          console.error("Dashboard sync error:", error);
+        }
+      };
+
+      syncProfile();
     }
     
     const storedPrefs = localStorage.getItem("preferences");
@@ -38,9 +78,65 @@ export const DashboardPage = ({ onNavigate }: PageProps) => {
     }
   }, []);
 
-  const savePreferences = () => {
-    localStorage.setItem("preferences", JSON.stringify(preferences));
-    setShowPreferences(false);
+  const savePreferences = async () => {
+    setIsLoadingPrefs(true);
+    try {
+      const token = localStorage.getItem("token");
+      
+      let interestedInData: string[] = [];
+      if (preferences.interestedIn === "both") {
+        interestedInData = ["male", "female"];
+      } else {
+        interestedInData = [preferences.interestedIn];
+      }
+
+      const response = await fetch(`${API_URL}/api/profile/update-preferences`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          minAge: preferences.minAge,
+          maxAge: preferences.maxAge,
+          interestedIn: interestedInData,
+          interests: preferences.interests
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        toast.success("Preferences saved!");
+        // Update local storage user data as well
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          const user = JSON.parse(storedUser);
+          user.MinDatingAge = preferences.minAge;
+          user.MaxDatingAge = preferences.maxAge;
+          user.InterestedIn = interestedInData;
+          user.Interests = preferences.interests;
+          localStorage.setItem("user", JSON.stringify(user));
+          setUserData(user);
+        }
+        setShowPreferences(false);
+      } else {
+        toast.error(data.msg || "Failed to save preferences");
+      }
+    } catch (error) {
+      toast.error("Error saving preferences");
+      console.error(error);
+    } finally {
+      setIsLoadingPrefs(false);
+    }
+  };
+
+  const toggleInterest = (interest: string) => {
+    setPreferences(prev => ({
+      ...prev,
+      interests: prev.interests.includes(interest)
+        ? prev.interests.filter(i => i !== interest)
+        : [...prev.interests, interest]
+    }));
   };
 
   const handleLogout = () => {
@@ -76,7 +172,7 @@ export const DashboardPage = ({ onNavigate }: PageProps) => {
     }
   ];
 
-  const userImage = userData?.ProfilePicture 
+  const userImage = userData?.ProfilePicture && userData.ProfilePicture !== "/default.png"
     ? `${API_URL}${userData.ProfilePicture}` 
     : "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&h=150&q=80";
 
@@ -276,20 +372,25 @@ export const DashboardPage = ({ onNavigate }: PageProps) => {
                 </button>
               </div>
 
-              <div className="space-y-8">
-                {/* Major Preference */}
+              <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2 scrollbar-hide">
+                {/* Interest Preference (Gender) */}
                 <div className="group">
-                  <label className="block text-[10px] uppercase tracking-widest font-semibold text-outline mb-3">Preferred Major</label>
-                  <select 
-                    className="w-full bg-transparent border-0 border-b border-outline/30 focus:border-primary focus:ring-0 text-on-surface py-2 px-0 transition-all text-sm outline-none appearance-none"
-                    value={preferences.major}
-                    onChange={(e) => setPreferences({...preferences, major: e.target.value})}
-                  >
-                    <option value="" className="bg-surface">Any Major</option>
-                    {MAJORS.map((major) => (
-                      <option key={major} value={major} className="bg-surface">{major}</option>
+                  <label className="block text-[10px] uppercase tracking-widest font-semibold text-outline mb-3">Interested In</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {["male", "female", "both"].map((option) => (
+                      <button
+                        key={option}
+                        onClick={() => setPreferences({ ...preferences, interestedIn: option })}
+                        className={`py-2 px-1 rounded-xl border text-[10px] uppercase tracking-widest font-bold transition-all ${
+                          preferences.interestedIn === option 
+                            ? "border-primary bg-primary text-background shadow-[0_0_15px_rgba(242,204,0,0.3)]" 
+                            : "border-outline/20 text-outline hover:border-primary/50"
+                        }`}
+                      >
+                        {option}
+                      </button>
                     ))}
-                  </select>
+                  </div>
                 </div>
 
                 {/* Age Preference */}
@@ -303,7 +404,7 @@ export const DashboardPage = ({ onNavigate }: PageProps) => {
                         max="99"
                         className="w-full bg-transparent border-0 border-b border-outline/30 focus:border-primary focus:ring-0 text-on-surface py-2 px-0 transition-all text-sm outline-none"
                         value={preferences.minAge}
-                        onChange={(e) => setPreferences({...preferences, minAge: parseInt(e.target.value)})}
+                        onChange={(e) => setPreferences({...preferences, minAge: parseInt(e.target.value) || 18})}
                         placeholder="Min"
                       />
                       <span className="text-[8px] uppercase tracking-widest text-outline/50 mt-1 block">Min Age</span>
@@ -315,7 +416,7 @@ export const DashboardPage = ({ onNavigate }: PageProps) => {
                         max="99"
                         className="w-full bg-transparent border-0 border-b border-outline/30 focus:border-primary focus:ring-0 text-on-surface py-2 px-0 transition-all text-sm outline-none"
                         value={preferences.maxAge}
-                        onChange={(e) => setPreferences({...preferences, maxAge: parseInt(e.target.value)})}
+                        onChange={(e) => setPreferences({...preferences, maxAge: parseInt(e.target.value) || 100})}
                         placeholder="Max"
                       />
                       <span className="text-[8px] uppercase tracking-widest text-outline/50 mt-1 block">Max Age</span>
@@ -323,11 +424,32 @@ export const DashboardPage = ({ onNavigate }: PageProps) => {
                   </div>
                 </div>
 
+                {/* Interests Section */}
+                <div className="group">
+                  <label className="block text-[10px] uppercase tracking-widest font-semibold text-outline mb-3">Interests</label>
+                  <div className="flex flex-wrap gap-2">
+                    {COMMON_INTERESTS.map((interest) => (
+                      <button
+                        key={interest}
+                        onClick={() => toggleInterest(interest)}
+                        className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${
+                          preferences.interests.includes(interest)
+                            ? "bg-primary/20 border-primary text-primary"
+                            : "bg-white/5 border-white/10 text-outline hover:border-white/20"
+                        }`}
+                      >
+                        {interest}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <button 
                   onClick={savePreferences}
-                  className="gradient-gold w-full py-4 rounded-full text-background font-black text-xs tracking-[0.3em] uppercase hover:shadow-[0_0_20px_rgba(242,204,0,0.3)] transition-all active:scale-95"
+                  disabled={isLoadingPrefs}
+                  className="gradient-gold w-full py-4 rounded-full text-background font-black text-xs tracking-[0.3em] uppercase hover:shadow-[0_0_20px_rgba(242,204,0,0.3)] transition-all active:scale-95 disabled:opacity-50 mt-4"
                 >
-                  Save Preferences
+                  {isLoadingPrefs ? "Saving..." : "Save Preferences"}
                 </button>
               </div>
             </motion.div>
