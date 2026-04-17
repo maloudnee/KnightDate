@@ -9,7 +9,6 @@ export const RegisterPage = ({ onNavigate }: PageProps) => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
@@ -105,21 +104,6 @@ export const RegisterPage = ({ onNavigate }: PageProps) => {
           </header>
 
           <form className="space-y-8" onSubmit={handleRegister}>
-            {/* Email Field */}
-            <div className="group">
-              <label className="block text-[10px] uppercase tracking-widest font-semibold text-outline mb-3" htmlFor="email">
-                Email
-              </label>
-              <input 
-                className="w-full bg-transparent border-0 border-b border-outline/30 focus:border-primary focus:ring-0 text-on-surface py-2 px-0 transition-all placeholder:text-outline/20 text-sm outline-none"
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-
             {/* Username Field */}
             <div className="group">
               <label className="block text-[10px] uppercase tracking-widest font-semibold text-outline mb-3" htmlFor="username">
