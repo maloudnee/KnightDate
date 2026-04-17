@@ -49,7 +49,6 @@ router.post("/dislike-user", async ( req, res ) => {
     }
 });
 
-
 //get all user's matches
 router.get("/get-matches", async (req, res) => {
     const userID = req.user;

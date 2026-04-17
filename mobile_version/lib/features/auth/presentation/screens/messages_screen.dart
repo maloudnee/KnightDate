@@ -32,7 +32,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
       final String url = "https://knightdate.xyz/api/api/messages/inbox/$userId";
 
-      final response = await http.get(
+      final chatResponse = await http.get(
         Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
@@ -40,11 +40,15 @@ class _MessagesScreenState extends State<MessagesScreen> {
         },
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          activeChats = data['chats'] ?? [];
+      final matches = await http.get(
+        Uri.parse("https://knightdate.xyz/api/api/match/get-matches"),
+        headers: {'Authorization': 'Bearer $token'},
+      );
 
+      if (chatResponse.statusCode == 200 && matches.statusCode == 200) {
+        setState(() {
+          activeChats = jsonDecode(chatResponse.body)['chats'] ?? [];
+          newMatches = jsonDecode(matches.body);
           _isLoading = false; 
         });
       }
@@ -146,30 +150,44 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   // Matches
   Widget _buildMatchCircle(dynamic match) {
-    final imageUrl = 'https://knightdate.xyz:${match['ProfilePicture']}';
-    
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(2), // The Gold Border
-            decoration: const BoxDecoration(color: gold, shape: BoxShape.circle),
-            child: CircleAvatar(
-              radius: 32,
-              backgroundColor: Colors.black,
-              child: CircleAvatar(
-                radius: 30,
-                backgroundImage: NetworkImage(imageUrl),
+      final imageUrl = 'https://knightdate.xyz${match['ProfilePicture'] ?? '/default.png'}';
+      
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10.0),
+        child: GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context, 
+              MaterialPageRoute(
+                builder: (context) => ChatScreen(
+                  recieverId: match['_id'], 
+                  recieverName: match['FirstName'] ?? "N/A",
+                  recieverImage: imageUrl,
+                ),
               ),
-            ),
+            );
+          },
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(2),
+                decoration: const BoxDecoration(color: gold, shape: BoxShape.circle),
+                child: CircleAvatar(
+                  radius: 32,
+                  backgroundColor: Colors.black,
+                  backgroundImage: NetworkImage(imageUrl),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                match['FirstName'] ?? "N/A", 
+                style: const TextStyle(color: Colors.white70, fontSize: 13)
+              ),
+            ],
           ),
-          const SizedBox(height: 6),
-          Text(match['FirstName'] ?? "Knight", style: const TextStyle(color: Colors.white70, fontSize: 13)),
-        ],
-      ),
-    );
-  }
+        ),
+      );
+    }
 
   // Chat Messages
   Widget _buildChatItem(dynamic chat, bool isDark) {
