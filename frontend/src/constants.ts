@@ -33,4 +33,3 @@ export const MAJORS = [
   "Sociology",
   "Theater"
 ].sort();
->>>>>>> 1653abb947811773c32df3dddb063b2d2153022b
