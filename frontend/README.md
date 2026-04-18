@@ -2,4 +2,4 @@ to run this locally:
 
 npm install 
 
-npm install -D @types/react @types/react-dom
+npm install -D @types/react @types/react-dom  

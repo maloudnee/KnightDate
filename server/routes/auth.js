@@ -74,7 +74,72 @@ router.get("/verify-email", async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const updatedUser = await User.findByIdAndUpdate(decoded.id, { isVerified: true});
     if(updatedUser){
-      res.send("<h1>Email Verified!<h1><p>You can close this tab and log in</p>");
+      res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+        
+        :root {
+            --font-sans: "Plus Jakarta Sans", sans-serif;
+            --color-primary: #F2CC00;
+            --color-background: #0A0A0A;
+            --color-surface: #131313;
+            --color-on-surface: #F5F5F5;
+            --color-on-surface-variant: #D0C5AF;
+        }
+
+        body {
+            background-color: var(--color-background);
+            color: var(--color-on-surface);
+            font-family: var(--font-sans);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .gradient-gold {
+            background: linear-gradient(135deg, #D4AF37 0%, #F2CC00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .prestige-card {
+            background-color: var(--color-surface);
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            padding: 3rem;
+            border-radius: 1.5rem;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .check-icon {
+            color: var(--color-primary);
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="prestige-card">
+        <div class="check-icon">✓</div>
+        <h1 class="gradient-gold" style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">
+            Email Verified
+        </h1>
+        <p style="color: var(--color-on-surface-variant); font-size: 1.1rem;">
+            Your account is now active.
+        </p>
+        <div style="margin-top: 2rem; opacity: 0.8; font-size: 0.9rem;">
+            You can safely close this tab and log in.
+        </div>
+    </div>
+</body>
+</html>`);
     } else {
       res.status(404).send("User not found.");
     }
