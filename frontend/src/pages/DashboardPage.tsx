@@ -567,22 +567,12 @@ export const DashboardPage = ({ onNavigate }: PageProps) => {
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="text-center max-w-sm px-8"
               >
-                <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-8 prestige-border">
-                  <Compass className="w-10 h-10 text-primary" />
-                </div>
-                <h2 className="text-2xl font-black italic tracking-tighter text-primary uppercase mb-4">Ready to find Love?</h2>
+                
+                <h2 className="text-2xl font-black italic tracking-tighter text-primary uppercase mb-4">Find new connections</h2>
                 <p className="text-outline text-sm leading-relaxed mb-10">
                   Begin your journey by discovering new students on campus or revisit your existing conversations.
                 </p>
-                <div className="flex flex-col gap-4">
-                  <button 
-                    onClick={handleDiscover}
-                    className="gradient-gold py-4 rounded-full text-background font-black text-xs tracking-[0.2em] uppercase shadow-2xl hover:scale-105 active:scale-95 transition-all"
-                  >
-                    Start Discovering
-                  </button>
-                  <p className="text-[10px] text-outline/30 uppercase tracking-widest">or check your matches in the sidebar</p>
-                </div>
+
               </motion.div>
             ) : viewState === "discovery" ? (
               <div key="discovery-view-container" className="flex flex-col items-center justify-center h-full w-full p-8">
