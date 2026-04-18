@@ -186,11 +186,6 @@ export const DashboardPage = ({ onNavigate }: PageProps) => {
     return () => clearInterval(interval);
   }, [viewState, selectedConversation, userData]);
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   const savePreferences = async () => {
     setIsLoadingPrefs(true);
     try {
@@ -422,13 +417,13 @@ export const DashboardPage = ({ onNavigate }: PageProps) => {
 
   const userImage = userData?.ProfilePicture && userData.ProfilePicture !== "/default.png"
     ? `${API_URL}${userData.ProfilePicture}` 
-    : "http://localhost:5000/default.png";
+    : `${API_URL}/default.png`;
 
   const getMatchImage = (match: any) => {
     const pic = match.ProfilePicture || match.Profilepicture;
     return pic && pic !== "/default.png"
       ? `${API_URL}${pic}`
-      : "http://localhost:5000/default.png";
+      : `${API_URL}/default.png`;
   };
 
   return (
@@ -619,7 +614,7 @@ export const DashboardPage = ({ onNavigate }: PageProps) => {
                         <img 
                           src={potentialMatches[currentIndex].ProfilePicture && potentialMatches[currentIndex].ProfilePicture !== "/default.png"
                             ? `${API_URL}${potentialMatches[currentIndex].ProfilePicture}`
-                            : "https://knightdate.xyz/public/default.png"
+                            : `${API_URL}/default.png`
                           } 
                           alt={potentialMatches[currentIndex].FirstName} 
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
