@@ -22,7 +22,7 @@ export default function App() {
   useEffect(() => {
     // Check for direct URL resets
     const path = window.location.pathname;
-    const resetMatch = path.match(/^\/reset-password\/(.+)$/);
+    const resetMatch = path.match(/\/reset-password\/(.+)$/);
     if (resetMatch) {
       setResetToken(resetMatch[1]);
       setCurrentPage("reset-password");
