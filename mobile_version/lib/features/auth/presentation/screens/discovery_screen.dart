@@ -71,9 +71,33 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           "targetID": targetID
         }),
       );
+
+      if (liked) {
+        final matchResponse = await http.post(
+          Uri.parse('https://knightdate.xyz/api/api/match/match-users'),
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer $token"
+          },
+          body: json.encode({"targetID": targetID}),
+        );
+      
+        if (matchResponse.statusCode == 200) {
+          final matchData = json.decode(matchResponse.body);
+          if (matchData['matched'] == true && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("It's a Match! Check your messages."),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to record your choice. Please try again."))
+        const SnackBar(content: Text("Failed to record your choice. Please try again."), backgroundColor: Colors.red)
       );
       print("Failed to send choice: $e");
     }
@@ -112,7 +136,10 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   }
 
   Widget _buildUserCard(dynamic user, bool isDark) {
-    final String imageUrl = 'https://knightdate.xyz${user['ProfilePicture']}';
+    final String rawPath = user['ProfilePicture'] ?? 'default.jpg';
+    final String imageUrl = rawPath != 'default.jpg'
+      ? 'https://knightdate.xyz/api$rawPath'
+      : '';
 
     return Container(
       decoration: BoxDecoration(

@@ -20,6 +20,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.white, 
         colorScheme: ColorScheme.light(
           primary: gold, 
+          secondary: Color(0xFFD4AF37),
           onPrimary: Colors.white,
         )
       ),
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.black, 
         colorScheme: ColorScheme.dark(
           primary: gold, 
+          secondary: Color(0xFFD4AF37),
           onPrimary: Colors.black,
         )
       ),

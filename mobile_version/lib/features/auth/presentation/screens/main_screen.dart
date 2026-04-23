@@ -23,16 +23,19 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     
-    return Scaffold(
-      body: _screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.explore), label: "Discover"),
-          BottomNavigationBarItem(icon: Icon(Icons.message), label: "Messages"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-        ],
+    return PopScope(
+      canPop: false, 
+      child: Scaffold(
+        body: _screens[_currentIndex],
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) => setState(() => _currentIndex = index),
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.explore), label: "Discover"),
+            BottomNavigationBarItem(icon: Icon(Icons.message), label: "Messages"),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),          
+          ],
+        ),
       ),
     );
   }

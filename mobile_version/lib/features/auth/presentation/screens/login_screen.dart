@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'main_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -23,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter both username and password"))
+        const SnackBar(content: Text("Please enter both username and password"), backgroundColor: Colors.redAccent)
       );
       return;
     }
@@ -62,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
             MaterialPageRoute(builder: (context) => const MainScreen())
           );
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Login successful!"))
+            const SnackBar(content: Text("Login successful!"), backgroundColor: Colors.greenAccent)
           );
         }
 
@@ -72,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
         String errorMessage = errorData['msg'] ?? "An error occurred";
         print("Login failed: ${errorData['message']}");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage))
+          SnackBar(content: Text(errorMessage), backgroundColor: Colors.redAccent)
         );
       }
     } catch (e) {
@@ -95,11 +96,18 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back, 
+        automaticallyImplyLeading: false,
+        leadingWidth: 120.0,
+        leading: TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text(
+            "Cancel",
+            style: TextStyle(
+              color: Color(0xFFD4AF37),
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+            ),
           ),
-          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Center(
@@ -171,8 +179,22 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black)
                             )
                           : const Text("Login", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        ),
+                      ), 
+                      const SizedBox(height: 16),                    
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),);
+                        },
+                        child: const Text(
+                          "Forgot Password?",
+                          style: TextStyle(
+                            color: gold, 
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),

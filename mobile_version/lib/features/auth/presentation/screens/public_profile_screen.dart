@@ -24,11 +24,25 @@ class PublicProfileScreen extends StatelessWidget {
           children: [
             // Profile Picture
             Center(
-              child: CircleAvatar(
-                radius: 100,
-                backgroundImage: userData['ProfilePicture'] != null && userData['ProfilePicture'] != "/default.png"
-                    ? NetworkImage("https://knightdate.xyz${userData['ProfilePicture']}")
-                    : const NetworkImage("https://via.placeholder.com/150"),
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(color: gold, shape: BoxShape.circle),
+                child: CircleAvatar(
+                  radius: 100,
+                  backgroundColor: isDark ? Colors.grey[900] : Colors.grey[200],
+                  backgroundImage: () {
+                    String rawPath = userData['ProfilePicture'] ?? "";
+                    String cleanPath = rawPath.replaceAll('/api/api', '');
+                    if (!cleanPath.startsWith('/') && cleanPath.isNotEmpty) cleanPath = '/$cleanPath';
+                    if (cleanPath.isNotEmpty && cleanPath != '/default.png') {
+                      return NetworkImage("https://knightdate.xyz/api$cleanPath") as ImageProvider;
+                    }
+                    return null;
+                  }(),
+                  child: (userData['ProfilePicture'] == null || userData['ProfilePicture'] == '/default.png')
+                    ? Icon(Icons.person, size: 80, color: isDark ? gold : Colors.grey[600])
+                    : null,
+                ),
               ),
             ),
             const SizedBox(height: 20),
