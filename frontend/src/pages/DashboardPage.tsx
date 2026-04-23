@@ -616,9 +616,6 @@ export const DashboardPage = ({ onNavigate }: PageProps) => {
                             <h3 className="text-3xl font-black text-white tracking-tight">
                               {potentialMatches[currentIndex].FirstName}, {potentialMatches[currentIndex].Age}
                             </h3>
-                            <button className="text-white/60 hover:text-white transition-colors pointer-events-auto">
-                              <Share2 className="w-5 h-5" />
-                            </button>
                           </div>
                           <p className="text-primary text-[10px] font-bold uppercase tracking-[0.2em] mb-4">
                             {potentialMatches[currentIndex].Major}
@@ -768,7 +765,7 @@ export const DashboardPage = ({ onNavigate }: PageProps) => {
         <Heart className="w-6 h-6 text-on-surface-variant" />
         <div className="w-8 h-8 rounded-full border border-primary p-0.5">
           <img 
-            src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&h=150&q=80" 
+            src={`${API_URL}/default.png`}
             alt="Profile" 
             className="w-full h-full object-cover rounded-full"
             referrerPolicy="no-referrer"

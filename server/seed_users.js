@@ -59,16 +59,25 @@ const seedUsers = async () => {
       };
     };
 
-    // Generate 4 Men
+    // Generate 8 Men
     MALE_FILES.forEach(file => {
       users.push(createUser("male", file));
     });
 
-    // Generate 4 Women
+    MALE_FILES.forEach(file => {
+      users.push(createUser("male", file));
+    });
+
+    // Generate 8 Women
     FEMALE_FILES.forEach(file => {
       users.push(createUser("female", file));
     });
 
+    // Generate 8 Women
+    FEMALE_FILES.forEach(file => {
+      users.push(createUser("female", file));
+    });
+    
     await User.insertMany(users);
     console.log("Successfully seeded 8 users (4 male, 4 female) with unique profile pictures!");
     process.exit();
