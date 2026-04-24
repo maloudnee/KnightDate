@@ -17,24 +17,55 @@ const transporter = nodemailer.createTransport({
 // REGISTER
 router.post("/register", async (req, res) => {
   const { username, password, email } = req.body;
-  if (!email || typeof email !== 'string' || !email.trim()) {
-    return res.status(400).json({ msg: "Email is required" });
+
+  // Validate all fields are provided
+  if (!username || !password || !email) {
+    return res.status(400).json({ msg: "Username, password, and email are required" });
+  }
+
+  // Validate field types
+  if (typeof username !== 'string' || typeof password !== 'string' || typeof email !== 'string') {
+    return res.status(400).json({ msg: "Username, password, and email must be strings" });
+  }
+
+  // Trim and validate non-empty
+  const trimmedUsername = username.trim();
+  const trimmedPassword = password.trim();
+  const trimmedEmail = email.trim();
+
+  if (!trimmedUsername || !trimmedPassword || !trimmedEmail) {
+    return res.status(400).json({ msg: "Fields cannot be empty" });
+  }
+
+  // Validate minimum lengths
+  if (trimmedUsername.length < 3) {
+    return res.status(400).json({ msg: "Username must be at least 3 characters" });
+  }
+
+  if (trimmedPassword.length < 6) {
+    return res.status(400).json({ msg: "Password must be at least 6 characters" });
+  }
+
+  // Basic email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(trimmedEmail)) {
+    return res.status(400).json({ msg: "Please provide a valid email address" });
   }
 
   try {
-    const userExists = await User.findOne({ username });
+    const userExists = await User.findOne({ username: trimmedUsername });
     if (userExists) return res.status(400).json({ msg: "Username is already taken" });
 
-    const emailExists = await User.findOne({ Email: email });
+    const emailExists = await User.findOne({ Email: trimmedEmail });
     if (emailExists) return res.status(400).json({ msg: "Email is already taken" });
 
-    const hashed = await bcrypt.hash(password, 10);
+    const hashed = await bcrypt.hash(trimmedPassword, 10);
 
     // Create User
     const user = new User({
-       username, 
+       username: trimmedUsername, 
        password: hashed, 
-       Email: email
+       Email: trimmedEmail
       });
     await user.save();
     console.log("User saved to database:", user.collection.name);
@@ -51,7 +82,7 @@ router.post("/register", async (req, res) => {
      // Send the email
     await transporter.sendMail({
       from: '"KnightDate Team" <noreply@knightdate.com>',
-      to: email.trim(),
+      to: trimmedEmail,
       subject: "Verify Your Account",
       html: `<h3>Welcome to KnightDate!</h3>
          <p>Please verify your email by clicking on the link provided:</p>
@@ -153,15 +184,33 @@ router.get("/verify-email", async (req, res) => {
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
+  // Validate all fields are provided
+  if (!username || !password) {
+    return res.status(400).json({ msg: "Username and password are required" });
+  }
+
+  // Validate field types
+  if (typeof username !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ msg: "Username and password must be strings" });
+  }
+
+  // Trim and validate non-empty
+  const trimmedUsername = username.trim();
+  const trimmedPassword = password.trim();
+
+  if (!trimmedUsername || !trimmedPassword) {
+    return res.status(400).json({ msg: "Username and password cannot be empty" });
+  }
+
   try {
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ username: trimmedUsername });
     if (!user) return res.status(400).json({ msg: "Invalid credentials" });
 
     if(!user.isVerified){
       return res.status(401).json({msg: "Please verify your email before loggin in."});
     }
 
-    const match = await bcrypt.compare(password, user.password);
+    const match = await bcrypt.compare(trimmedPassword, user.password);
     if (!match) return res.status(400).json({ msg: "Invalid credentials" });
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -183,8 +232,32 @@ router.post("/login", async (req, res) => {
 // Resend verification link for email
 router.post("/resend-verification", async (req, res) => {
   const { email } = req.body;
+
+  // Validate email is provided
+  if (!email) {
+    return res.status(400).json({ msg: "Email is required" });
+  }
+
+  // Validate email type
+  if (typeof email !== 'string') {
+    return res.status(400).json({ msg: "Email must be a string" });
+  }
+
+  // Trim and validate non-empty
+  const trimmedEmail = email.trim();
+
+  if (!trimmedEmail) {
+    return res.status(400).json({ msg: "Email cannot be empty" });
+  }
+
+  // Basic email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(trimmedEmail)) {
+    return res.status(400).json({ msg: "Please provide a valid email address" });
+  }
+
   try {
-    const user = await User.findOne({ Email: email });
+    const user = await User.findOne({ Email: trimmedEmail });
     if(!user) {
       return res.status(404).json({ msg: "No account found with this email." });
     }
@@ -200,7 +273,7 @@ router.post("/resend-verification", async (req, res) => {
     
     await transporter.sendMail({
       from: '"KnightDate Team" <noreply@knightdate.com>',
-      to: email.trim(),
+      to: trimmedEmail,
       subject: "New Verification Link",
       html: `<h3>Verify Your KnightDate Account</h3>
              <p>Use the link below to verify your account:</p>
@@ -218,20 +291,46 @@ router.post("/resend-verification", async (req, res) => {
 // Send password reset email
 router.post("/forgot-password", async ( req, res ) => {
   const { email } = req.body;
-  const user = await User.findOne({ Email: email });
-  if(!user) return res.status(404).json({msg: "User not found."});
-  try{
+
+  // Validate email is provided
+  if (!email) {
+    return res.status(400).json({ msg: "Email is required" });
+  }
+
+  // Validate email type
+  if (typeof email !== 'string') {
+    return res.status(400).json({ msg: "Email must be a string" });
+  }
+
+  // Trim and validate non-empty
+  const trimmedEmail = email.trim();
+
+  if (!trimmedEmail) {
+    return res.status(400).json({ msg: "Email cannot be empty" });
+  }
+
+  // Basic email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(trimmedEmail)) {
+    return res.status(400).json({ msg: "Please provide a valid email address" });
+  }
+
+  try {
+    const user = await User.findOne({ Email: trimmedEmail });
+    if(!user) return res.status(404).json({msg: "User not found."});
+    
     const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {expiresIn: "1h"});
     const url = `${process.env.FRONTEND_PASSWORD_RESET_URL}/reset-password/${resetToken}`;
     
     await transporter.sendMail({
-      to: email,
+      to: trimmedEmail,
       subject: "KnightDate Password Reset",
       html: `<p>Click <a href="${url}">here</a> to reset your password. This link expires in 1 hour.</p>`
     });
     res.json({ msg: "Reset link sent!" });
   } catch (err){
-    res.json({msg: "Server issue while sending password reset"});
+    res.status(500).json({msg: "Server error while sending password reset"});
+    console.error(err);
   }
 });
 
@@ -239,9 +338,32 @@ router.post("/forgot-password", async ( req, res ) => {
 router.post("/reset-password/:token", async (req, res) => {
   const { password } = req.body;
   const { token } = req.params;
+
+  // Validate password is provided
+  if (!password) {
+    return res.status(400).json({ msg: "Password is required" });
+  }
+
+  // Validate password type
+  if (typeof password !== 'string') {
+    return res.status(400).json({ msg: "Password must be a string" });
+  }
+
+  // Trim and validate non-empty
+  const trimmedPassword = password.trim();
+
+  if (!trimmedPassword) {
+    return res.status(400).json({ msg: "Password cannot be empty" });
+  }
+
+  // Validate minimum length
+  if (trimmedPassword.length < 6) {
+    return res.status(400).json({ msg: "Password must be at least 6 characters" });
+  }
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
     
     await User.findByIdAndUpdate(decoded.id, { password: hashedPassword });
     res.json({ msg: "Password updated successfully!" });

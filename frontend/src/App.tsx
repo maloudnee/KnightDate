@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Toaster } from "sonner";
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -18,6 +18,29 @@ type Page = "landing" | "login" | "register" | "dashboard" | "edit-profile" | "f
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>("landing");
   const [resetToken, setResetToken] = useState<string>("");
+  const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const handleInactivity = () => {
+    clearTimeout(inactivityTimer.current!);
+    inactivityTimer.current = setTimeout(() => {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      setCurrentPage("landing");
+    }, 5 * 60 * 1000); // 5 minutes
+  };
+
+  useEffect(() => {
+    // Inactivity timeout
+    handleInactivity();
+    window.addEventListener("mousemove", handleInactivity);
+    window.addEventListener("keydown", handleInactivity);
+
+    return () => {
+      window.removeEventListener("mousemove", handleInactivity);
+      window.removeEventListener("keydown", handleInactivity);
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+    };
+  }, []);
 
   useEffect(() => {
     // Check for direct URL resets
